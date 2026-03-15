@@ -92,7 +92,7 @@ function precompute() {
                     const base  = rd.drivers[d]; if (!base) return;
                     const pts = isCap ? base.pts * 2 : base.pts;
                     const exp = isCap ? base.exp * 2 : base.exp;
-                    dBrk[d] = { pts, exp, isCap };
+                    dBrk[d] = { pts: base.pts, exp: base.exp, isCap };
                     rPts += pts; rExp += exp;
                 });
                 p.team.constructors.forEach(c => {
@@ -203,11 +203,27 @@ function startClock() {
 
 function renderUpdatedStatus(now) {
     const el = document.getElementById('updated-status');
-    if (!el || !currentRound) return;
+    if (!el) return;
 
-    const rd    = RESULTS[currentRound.id];
-    const order = sessionOrder(currentRound.fmt);
-    const sess  = currentRound.sessions ?? {};
+    // Use last completed round if currentRound has no sessions started yet
+    const checkRound = (() => {
+        if (!currentRound) return null;
+        const sess  = currentRound.sessions ?? {};
+        const order = sessionOrder(currentRound.fmt);
+        const anyStarted = order.some(k => sess[k] && new Date(sess[k]) < now);
+        if (anyStarted) return currentRound;
+        // currentRound hasn't started — check last completed instead
+        return lastCompletedRound() ?? currentRound;
+    })();
+
+    if (!checkRound) {
+        el.innerHTML = `UPDATED: <span style="color:var(--text-muted);font-weight:700">—</span>`;
+        return;
+    }
+
+    const rd    = RESULTS[checkRound.id];
+    const order = sessionOrder(checkRound.fmt);
+    const sess  = checkRound.sessions ?? {};
 
     let lastStarted = null;
     for (const key of order) {
@@ -234,8 +250,8 @@ function renderUpdatedStatus(now) {
 function renderBanner() {
     const completed = REG.rounds.filter(r => isRoundComplete(r)).length;
     const inProgress = REG.rounds.filter(r => isRoundPartial(r)).length;
-    const current   = completed + inProgress; // rounds started (fully or partially)
     const total     = REG.rounds.filter(r => r.status !== 'cancelled').length;
+    const current   = currentRound ? currentRound.n : completed + inProgress;
     const pct       = Math.round(current / total * 100);
     const last      = lastCompletedRound();
     const next      = currentRound;
@@ -340,71 +356,61 @@ function renderStandings() {
 
         const allDrivers = [p.team.captain, ...p.team.drivers];
 
-        const dRows = allDrivers.map(d => {
-            const dr = REG.drivers[d]; if (!dr) return '';
-            const con   = dr.constructor.toLowerCase();
-            const isCap = d === p.team.captain;
-            const initP = dr.init_price;
-            const currP = latestPrice(d, 'drivers') ?? initP;
+        const makeRow = (code, name, con, isCap, type) => {
+            const initP = type === 'drivers'
+                ? (REG.drivers[code]?.init_price ?? 0)
+                : (REG.constructors[code]?.init_price ?? 0);
+            const currP = latestPrice(code, type) ?? initP;
             const diff  = currP - initP;
-            return `<div class="detail-item">
-                <span class="detail-color-bar" style="background:var(--${con})"></span>
-                <div>
-                    <div class="detail-item-code">${d}${isCap ? '<span class="x2">X2</span>' : ''}</div>
-                    <div class="detail-item-name">${shortName(dr.name)}</div>
-                </div>
-                <div class="price-col">
-                    <div class="price-curr">${currP.toFixed(1)}M</div>
-                    <div class="price-diff">${diffHtml(diff, true)} <span class="price-init">(${initP.toFixed(1)})</span></div>
+            return `<div class="hub-row price-row">
+                <div class="driver-tag" style="border-color:var(--${con})">${code}${isCap ? '<span class="x2">X2</span>' : ''}</div>
+                <div>${initP.toFixed(1)}M</div>
+                <div style="display:flex;align-items:center;justify-content:flex-end;gap:.35rem">
+                    <span style="font-size:.7rem">${diffHtml(diff, true)}</span>
+                    <span>${currP.toFixed(1)}M</span>
                 </div>
             </div>`;
+        };
+
+        const dRows = allDrivers.map(d => {
+            const dr = REG.drivers[d]; if (!dr) return '';
+            return makeRow(d, dr.name, dr.constructor.toLowerCase(), d === p.team.captain, 'drivers');
         }).join('');
 
         const cRows = p.team.constructors.map(c => {
             const cr = REG.constructors[c]; if (!cr) return '';
-            const initP = cr.init_price;
-            const currP = latestPrice(c, 'constructors') ?? initP;
-            const diff  = currP - initP;
-            return `<div class="detail-item">
-                <span class="detail-color-bar" style="background:var(--${c.toLowerCase()})"></span>
-                <div>
-                    <div class="detail-item-code">${c}</div>
-                    <div class="detail-item-name">${cr.name}</div>
-                </div>
-                <div class="price-col">
-                    <div class="price-curr">${currP.toFixed(1)}M</div>
-                    <div class="price-diff">${diffHtml(diff, true)} <span class="price-init">(${initP.toFixed(1)})</span></div>
-                </div>
-            </div>`;
+            return makeRow(c, cr.name, c.toLowerCase(), false, 'constructors');
         }).join('');
 
         const budgetDiff = p.budgetCurr - p.budgetInit;
         const totalBlock = `
             <div class="detail-total">
                 <div class="detail-total-col" style="text-align:left">
-                    <div class="detail-total-label">INITIAL VALUE</div>
+                    <div class="detail-total-label">INIT_VALUE</div>
                     <div class="detail-total-val">${p.budgetInit.toFixed(1)}M</div>
                 </div>
                 <div class="detail-total-col">
-                    <div class="detail-total-label">CURRENT VALUE</div>
-                    <div class="detail-total-val">${p.budgetCurr.toFixed(1)}M</div>
-                    <div class="detail-total-diff">${diffHtml(budgetDiff, false)}</div>
+                    <div class="detail-total-label">CURR_VALUE</div>
+                    <div class="detail-total-val" style="display:flex;align-items:baseline;justify-content:flex-end;gap:.4rem">
+                        <span class="detail-total-diff">${diffHtml(budgetDiff, false)}</span>
+                        <span>${p.budgetCurr.toFixed(1)}M</span>
+                    </div>
                 </div>
             </div>`;
 
         html += `<div class="standings-row${isLeader ? ' leader-row' : ''}">
             <div class="standings-main" onclick="toggleDetail('sd-${p.code}',this)">
                 <div class="s-rank">${p.rank}</div>
-                <div class="s-name">${p.code}<span style="font-size:.7rem;font-weight:400;color:var(--text-muted);margin-left:6px;margin-right:10px">${p.name}</span><i class="bi bi-chevron-down s-chevron"></i></div>
+                <div class="s-name"><i class="bi bi-chevron-down s-chevron"></i>${p.code}<span style="font-size:.7rem;font-weight:400;color:var(--text-muted);margin-left:6px">${p.name}</span></div>
                 <div class="s-pts" style="color:${isLeader ? 'var(--warn)' : 'var(--text-main)'}">${p.totalPts}</div>
                 <div class="s-wins">${p.wins}</div>
                 <div class="s-gap">${gapHtml}</div>
             </div>
             <div class="standings-detail" id="sd-${p.code}">
-                <div class="detail-section-title">DRIVERS</div>
-                <div class="detail-grid">${dRows}</div>
-                <div class="detail-section-title">CONSTRUCTORS</div>
-                <div class="detail-grid">${cRows}</div>
+                <div class="hub-row price-row hub-row-hd"><div>DRIVER</div><div>INIT_VALUE</div><div>CURR_VALUE</div></div>
+                ${dRows}
+                <div class="hub-row price-row hub-row-hd" style="margin-top:.5rem;padding-top:.5rem;border-top:1px solid var(--border)"><div>CONSTRUCTOR</div><div>INIT_VALUE</div><div>CURR_VALUE</div></div>
+                ${cRows}
                 ${totalBlock}
             </div>
         </div>`;
@@ -458,7 +464,7 @@ function renderCarousel() {
             </div>
             <div class="rc-name">${r.name}</div>
             <div class="rc-date">${r.date}</div>
-            <div class="rc-status ${status}">${stLabel[status] ?? ''}</div>
+            ${stLabel[status] ? `<div class="rc-status ${status}">${stLabel[status]}</div>` : ''}
         </div>`;
     }).join('');
 
@@ -535,10 +541,10 @@ function renderHub() {
     if (!rd) {
         const sess = nextSession(round);
         hub.innerHTML = `<div class="card-db text-center py-4">
-            <div class="label mb-2">GARA CORRENTE</div>
+            <div class="label mb-2">CURRENT ROUND</div>
             <div style="font-size:1.15rem;font-weight:700">${flag}${round.name.toUpperCase()}</div>
             <div class="label mt-1">${round.date}${round.fmt === 'spr' ? ' &nbsp;|&nbsp; SPRINT_WEEKEND' : ''}</div>
-            ${sess ? `<div class="mt-2" style="font-size:.82rem;color:var(--text-muted)"><i class="bi bi-clock me-1"></i>Prossima sessione: <span style="color:var(--accent)">${sess.label}</span></div>` : ''}
+            ${sess ? `<div class="mt-2" style="font-size:.8rem;color:var(--text-muted)"><i class="bi bi-clock me-1"></i>NEXT_SESSION<span class="footer-sep">//</span><span style="color:var(--accent)">${sess.label}</span></div>` : ''}
         </div>`;
         return;
     }
@@ -560,8 +566,8 @@ function renderHub() {
             const con = REG.drivers[d]?.constructor?.toLowerCase() ?? 'cad';
             dRows += `<div class="hub-row">
                 <div class="driver-tag" style="border-color:var(--${con})">${d}${dd.isCap ? '<span class="x2">X2</span>' : ''}</div>
-                <div class="${ptsClass(dd.pts)}">${dd.pts}</div>
-                <div class="${ptsClass(dd.exp)}">${dd.exp.toFixed(1)}</div>
+                <div class="${ptsClass(dd.isCap ? dd.pts * 2 : dd.pts)}">${dd.isCap ? dd.pts * 2 : dd.pts}</div>
+                <div class="${ptsClass(dd.isCap ? dd.exp * 2 : dd.exp)}">${(dd.isCap ? dd.exp * 2 : dd.exp).toFixed(1)}</div>
             </div>`;
         });
 

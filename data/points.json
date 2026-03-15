@@ -18,28 +18,29 @@
       "VRB":{"pts":35, "exp":6.3 },"WIL":{"pts":20, "exp":11.5}
     }
   },
-  "china": {
-    "updated_to": "qualy",
+ "china": {
+    "last_update": "2026-03-15T10:04:51.255419Z",
+    "updated_to": "race",
     "drivers": {
-      "ALB":{"pts":13, "exp":-0.3, "price":11.4},"ALO":{"pts":6,  "exp":-14.2,"price":9.4 },
-      "ANT":{"pts":21, "exp":36.5, "price":23.5},"BEA":{"pts":6,  "exp":8.8,  "price":8   },
-      "BOR":{"pts":6,  "exp":3.8,  "price":7   },"BOT":{"pts":-8, "exp":-3.2, "price":5.3 },
-      "COL":{"pts":9,  "exp":-0.1, "price":6.4 },"GAS":{"pts":4,  "exp":4.5,  "price":12.2},
-      "HAD":{"pts":5,  "exp":8.3,  "price":14.5},"HAM":{"pts":23, "exp":32.2, "price":22.6},
-      "HUL":{"pts":-3, "exp":3.2,  "price":6.2 },"LAW":{"pts":14, "exp":1.9,  "price":6.3 },
-      "LEC":{"pts":28, "exp":35.9, "price":23.1},"LIN":{"pts":-4, "exp":4.4,  "price":6.8 },
-      "NOR":{"pts":10, "exp":14.9, "price":27.1},"OCO":{"pts":9,  "exp":7.7,  "price":7.9 },
-      "PER":{"pts":9,  "exp":-2.7, "price":5.8 },"PIA":{"pts":13, "exp":21,   "price":25.2},
-      "RUS":{"pts":21, "exp":41.9, "price":27.7},"SAI":{"pts":12, "exp":0.1,  "price":11.6},
-      "STR":{"pts":5,  "exp":-14.5,"price":7.4 },"VER":{"pts":18, "exp":25.6, "price":28  }
+      "ALB":{"pts":-7, "exp":-0.3, "price":11.4},"ALO":{"pts":-11, "exp":-14.2, "price":9.4},
+      "ANT":{"pts":68, "exp":36.5, "price":23.5},"BEA":{"pts":35, "exp":8.8, "price":8},
+      "BOR":{"pts":-14, "exp":3.8, "price":7},"BOT":{"pts":2, "exp":-3.2, "price":5.3},
+      "COL":{"pts":16, "exp":-0.1, "price":6.4},"GAS":{"pts":21, "exp":4.5, "price":12.2},
+      "HAD":{"pts":22, "exp":8.3, "price":14.5},"HAM":{"pts":46, "exp":32.2, "price":22.6},
+      "HUL":{"pts":10, "exp":3.2, "price":6.2},"LAW":{"pts":35, "exp":1.9, "price":6.3},
+      "LEC":{"pts":51, "exp":35.9, "price":23.1},"LIN":{"pts":5, "exp":4.4, "price":6.8},
+      "NOR":{"pts":-10, "exp":14.9, "price":27.1},"OCO":{"pts":21, "exp":7.7, "price":7.9},
+      "PER":{"pts":20, "exp":-2.7, "price":5.8},"PIA":{"pts":-7, "exp":21, "price":25.2},
+      "RUS":{"pts":45, "exp":41.9, "price":27.7},"SAI":{"pts":30, "exp":0.1, "price":11.6},
+      "STR":{"pts":-13, "exp":-14.5, "price":7.4},"VER":{"pts":15, "exp":25.6, "price":28}
     },
     "constructors": {
-      "ALP":{"pts":18, "exp":10.3, "price":13.1},"AST":{"pts":10, "exp":-26.8,"price":9.7 },
-      "AUD":{"pts":6,  "exp":15.1, "price":6   },"CAD":{"pts":0,  "exp":-1.1, "price":5.4 },
-      "FER":{"pts":61, "exp":83.9, "price":23.6},"HAA":{"pts":20, "exp":21.8, "price":8   },
-      "MCL":{"pts":33, "exp":51.8, "price":28.8},"MER":{"pts":52, "exp":88.6, "price":29.6},
-      "RED":{"pts":33, "exp":50.3, "price":28.5},"VRB":{"pts":13, "exp":18,   "price":6.9 },
-      "WIL":{"pts":24, "exp":5.2,  "price":12.6}
+      "ALP":{"pts":44, "exp":10.3, "price":13.1},"AST":{"pts":-23, "exp":-26.8, "price":9.7},
+      "AUD":{"pts":-1, "exp":15.1, "price":6},"CAD":{"pts":21, "exp":-1.1, "price":5.4},
+      "FER":{"pts":117, "exp":83.9, "price":23.6},"HAA":{"pts":63, "exp":21.8, "price":8},
+      "MCL":{"pts":-7, "exp":51.8, "price":28.8},"MER":{"pts":115, "exp":88.6, "price":29.6},
+      "RED":{"pts":49, "exp":50.3, "price":28.5},"VRB":{"pts":45, "exp":18, "price":6.9},
+      "WIL":{"pts":22, "exp":5.2, "price":12.6}
     }
   }
 }
