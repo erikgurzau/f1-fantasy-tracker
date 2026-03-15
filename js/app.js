@@ -627,7 +627,7 @@ function renderHub() {
                 <div class="row d-flex align-items-center">
                     ${!isWinner && rData.pts !== maxPts 
                         ? `<div class="col-auto p-0" style="font-size:.7rem;color:var(--neg);">${rData.pts - maxPts}</div>` 
-                    : `<div class="col-auto pos p-0" style="font-size:.7rem;">LEADER</div>`}
+                    : `<div class="col-auto pos p-0" style="font-size:.7rem;">WINNER</div>`}
                     <span class="col" style="font-weight:700;color:${isWinner ? 'var(--warn)' : 'var(--text-main)'}">${rData.pts} PTS</span>
                 </div>
             </div>
