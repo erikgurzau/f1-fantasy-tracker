@@ -12,6 +12,13 @@ async function loadData() {
 }
 
 // ── SESSION HELPERS ───────────────────────────────────────
+
+// Session durations in ms (approximate, for LIVE detection)
+const SESSION_DURATION = {
+    fp1: 60*60*1000, fp2: 60*60*1000, fp3: 60*60*1000,
+    sprint_qualy: 45*60*1000, sprint: 75*60*1000,
+    qualy: 60*60*1000, race: 120*60*1000
+};
 const SESSION_ORDER_STD = ["fp1","fp2","fp3","qualy","race"];
 const SESSION_ORDER_SPR = ["fp1","sprint_qualy","sprint","qualy","race"];
 
@@ -151,12 +158,21 @@ function nextSession(round) {
     if (!round.sessions) return null;
     const order = sessionOrder(round.fmt);
     const now = Date.now();
+    let liveSession = null;
     for (const key of order) {
         const iso = round.sessions[key]; if (!iso) continue;
-        if (new Date(iso).getTime() > now)
-            return { key, label: SESSION_LABELS[key] ?? key.toUpperCase(), iso, ms: new Date(iso).getTime() - now };
+        const start = new Date(iso).getTime();
+        const dur   = SESSION_DURATION[key] ?? 120 * 60 * 1000;
+        if (start > now) {
+            // future session — return it (takes priority over live)
+            return { key, label: SESSION_LABELS[key] ?? key.toUpperCase(), iso, ms: start - now, live: false };
+        }
+        if (now < start + dur) {
+            // currently ongoing — remember it, keep scanning for future ones
+            liveSession = { key, label: SESSION_LABELS[key] ?? key.toUpperCase(), iso, ms: 0, live: true };
+        }
     }
-    return null;
+    return liveSession; // null if all sessions are fully past
 }
 function lastCompletedRound() {
     let last = null;
@@ -228,9 +244,9 @@ function renderBanner() {
 
     const lastCc = last ? (last.cc ?? 'un') : '';
     const lastBlock = `
-        <div class="banner-last">
+        <div class="px-3 pb-3">
             <div class="label" style="margin-bottom:.3rem">LAST ROUND</div>
-            <div class="rc-flag" style="display:flex;align-items:center;gap:.6rem;">
+            <div class="rc-flag fw-bold" style="display:flex;align-items:center;gap:.6rem;">
                 ${last ? `<img src="https://flagcdn.com/w40/${lastCc}.png" alt="${last.name}">` : ''}
                 ${last ? last.name.toUpperCase() : 'N/A'}
             </div>
@@ -242,37 +258,64 @@ function renderBanner() {
         const sess = nextSession(next);
         if (sess) {
             const cd = formatCD(sess.ms);
-            nextBlock = `
-            <div class="banner-sep"></div>
-            <div>
-                <div class="banner-next-label">CURRENT ROUND</div>
-                <div class="rc-flag" style="display:flex;align-items:center;gap:.6rem;margin-bottom:.35rem">
-                    <img src="https://flagcdn.com/w40/${next.cc ?? 'un'}.png" alt="${next.name}">
-                    ${next.name.toUpperCase()}
-                </div>
-                <div class="banner-sess-label"><i class="bi bi-clock me-1"></i><span style="color:var(--accent)">${sess.label}</span></div>
-                <div class="cd-wrap">
-                    <div class="cd-block"><div class="cd-digits" id="cd-d">${cd.d}</div><div class="cd-unit">DAYS</div></div>
+            const now0 = new Date();
+            const elapsed0 = now0 - new Date(sess.iso);
+            const dur0 = SESSION_DURATION[sess.key] ?? 120*60*1000;
+            const isLiveNow = sess.live === true || (sess.ms <= 0 && elapsed0 < dur0);
+            const cdContent = isLiveNow
+                ? `<div class="live-badge"><span class="live-dot"></span>LIVE</div>`
+                : `<div class="cd-block"><div class="cd-digits" id="cd-d">${cd.d}</div><div class="cd-unit">DAYS</div></div>
                     <div class="cd-sep">:</div>
                     <div class="cd-block"><div class="cd-digits" id="cd-h">${cd.h}</div><div class="cd-unit">HRS</div></div>
                     <div class="cd-sep">:</div>
                     <div class="cd-block"><div class="cd-digits" id="cd-m">${cd.m}</div><div class="cd-unit">MIN</div></div>
                     <div class="cd-sep">:</div>
-                    <div class="cd-block"><div class="cd-digits" id="cd-s">${cd.s}</div><div class="cd-unit">SEC</div></div>
+                    <div class="cd-block"><div class="cd-digits" id="cd-s">${cd.s}</div><div class="cd-unit">SEC</div></div>`;
+            nextBlock = `
+            <div class="banner-sep"></div>
+            <div class="banner-left p-3">
+                <div class="banner-next-label">CURRENT ROUND</div>
+                <div class="rc-flag" style="display:flex;align-items:center;gap:.6rem;margin-bottom:.35rem">
+                    <img src="https://flagcdn.com/w40/${next.cc ?? 'un'}.png" alt="${next.name}">
+                    ${next.name.toUpperCase()}
+                </div>
+                <div class="banner-sess-label">
+                    <i class="bi bi-clock me-1 align-middle"></i><span style="margin-left:.2rem">${sess.label}</span>
+                    <span style="color:var(--text-muted);font-size:.75rem">— ${new Date(sess.iso).toLocaleDateString('it-IT',{day:'2-digit',month:'short'}).toUpperCase()}, ${new Date(sess.iso).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}</span>
+                </div>
+                <div class="cd-wrap" id="cd-wrap-live">
+                    ${cdContent}
                 </div>
             </div>`;
             cdInterval = setInterval(() => {
-                const rem = new Date(sess.iso) - new Date();
-                const t = formatCD(rem);
-                ['d','h','m','s'].forEach(k => { const el = document.getElementById('cd-' + k); if (el) el.textContent = t[k]; });
-                if (rem <= 0) clearInterval(cdInterval);
+                const now2 = new Date();
+                const rem  = new Date(sess.iso) - now2;
+                const elapsed = now2 - new Date(sess.iso); // negative if not started
+                const dur = SESSION_DURATION[sess.key] ?? 120*60*1000;
+                const cdWrap = document.getElementById('cd-wrap-live');
+                if (!cdWrap) return;
+                if (rem > 0) {
+                    // still counting down
+                    const t = formatCD(rem);
+                    ['d','h','m','s'].forEach(k => { const el = document.getElementById('cd-' + k); if (el) el.textContent = t[k]; });
+                } else if (elapsed < dur) {
+                    // session is LIVE
+                    cdWrap.innerHTML = `<div class="live-badge"><span class="live-dot"></span>LIVE</div>`;
+                    clearInterval(cdInterval);
+                } else {
+                    // session ended, re-render banner
+                    clearInterval(cdInterval);
+                    renderBanner();
+                }
             }, 1000);
         }
     }
 
     document.getElementById('banner').innerHTML = `
-        <div class="label" style="margin-bottom:.5rem">SEASON_PROGRESS &nbsp;&mdash;&nbsp; R${pad(current)} / R${pad(total)}</div>
-        <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
+        <div class="px-3 pt-3">
+            <div class="label" style="margin-bottom:.5rem">SEASON_PROGRESS &nbsp;&mdash;&nbsp; R${pad(current)} / R${pad(total)}</div>
+            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
+        </div>
         ${lastBlock}${nextBlock}`;
 }
 
@@ -352,7 +395,7 @@ function renderStandings() {
         html += `<div class="standings-row${isLeader ? ' leader-row' : ''}">
             <div class="standings-main" onclick="toggleDetail('sd-${p.code}',this)">
                 <div class="s-rank">${p.rank}</div>
-                <div class="s-name">${p.name}<i class="bi bi-chevron-down s-chevron"></i></div>
+                <div class="s-name">${p.code}<span style="font-size:.7rem;font-weight:400;color:var(--text-muted);margin-left:6px;margin-right:10px">${p.name}</span><i class="bi bi-chevron-down s-chevron"></i></div>
                 <div class="s-pts" style="color:${isLeader ? 'var(--warn)' : 'var(--text-main)'}">${p.totalPts}</div>
                 <div class="s-wins">${p.wins}</div>
                 <div class="s-gap">${gapHtml}</div>
@@ -396,7 +439,13 @@ function renderCarousel() {
 
         const sprintBadge = r.fmt === 'spr' ? `<span class="rc-spr-badge">SPRINT</span>` : '';
 
+        const overlay = status === 'completed'
+            ? `<div class="rc-overlay-done"></div>`
+            : status === 'cancelled'
+            ? `<div class="rc-overlay-cancelled"></div>`
+            : '';
         return `<div class="${classes}" onclick="selectRace('${r.id}')">
+            ${overlay}
             <div class="rc-round">
                 <div class="rc-round-left">
                     <span class="dot ${dotMap[status] ?? 'dot-upcoming'}"></span>
@@ -408,7 +457,8 @@ function renderCarousel() {
                 <img src="https://flagcdn.com/w40/${cc}.png" alt="${r.name}" loading="lazy">
             </div>
             <div class="rc-name">${r.name}</div>
-            ${stLabel[status] ? `<div class="rc-status ${status}">${stLabel[status]}</div>` : ''}
+            <div class="rc-date">${r.date}</div>
+            <div class="rc-status ${status}">${stLabel[status] ?? ''}</div>
         </div>`;
     }).join('');
 
@@ -504,7 +554,7 @@ function renderHub() {
 
         const isWinner = rData.pts === maxPts && maxPts > -Infinity;
 
-        let dRows = `<div class="hub-row hub-row-hd"><div>DRIVER</div><div>PTS</div><div>EXP</div></div>`;
+        let dRows = `<div class="hub-row hub-row-hd"><div>DRIVER</div><div>PTS</div><div>XPT</div></div>`;
         [p.team.captain, ...p.team.drivers].forEach(d => {
             const dd  = rData.drivers[d]; if (!dd) return;
             const con = REG.drivers[d]?.constructor?.toLowerCase() ?? 'cad';
@@ -515,7 +565,7 @@ function renderHub() {
             </div>`;
         });
 
-        let cRows = `<div class="hub-row hub-row-hd" style="margin-top:.5rem;padding-top:.5rem;border-top:1px solid var(--border)"><div>CONSTRUCTOR</div><div>PTS</div><div>EXP</div></div>`;
+        let cRows = `<div class="hub-row hub-row-hd" style="margin-top:.5rem;padding-top:.5rem;border-top:1px solid var(--border)"><div>CONSTRUCTOR</div><div>PTS</div><div>XPT</div></div>`;
         p.team.constructors.forEach(c => {
             const cd  = rData.constructors[c]; if (!cd) return;
             cRows += `<div class="hub-row">
@@ -526,14 +576,19 @@ function renderHub() {
         });
 
         const acc = rData.acc.toFixed(0);
-        return `<div class="card-db"${isWinner ? ' style="border:3px solid var(--warn)"' : ''}>
+        return `<div class="card-db"${isWinner ? ' style="border:1px solid var(--warn)"' : ''}>
             <div class="d-flex justify-content-between align-items-center bb pb-2 mb-2">
-                <span style="font-weight:700">${p.name}${isWinner ? ' <i class="bi bi-trophy-fill" style="color:var(--warn);font-size:.85rem;margin-left:4px"></i>' : ''}</span>
-                <span style="font-weight:700;color:${isWinner ? 'var(--warn)' : 'var(--text-main)'}">${rData.pts} PTS</span>
+                <span style="font-weight:700">${p.code}<span style="margin-left:6px;font-size:.7rem;font-weight:400;color:var(--text-muted)">${p.name}</span></span>
+                <div class="row d-flex align-items-center">
+                    ${!isWinner && rData.pts !== maxPts 
+                        ? `<div class="col-auto p-0" style="font-size:.7rem;color:var(--neg);">${rData.pts - maxPts}</div>` 
+                    : `<div class="col-auto pos p-0" style="font-size:.7rem;">LEADER</div>`}
+                    <span class="col" style="font-weight:700;color:${isWinner ? 'var(--warn)' : 'var(--text-main)'}">${rData.pts} PTS</span>
+                </div>
             </div>
             ${dRows}${cRows}
             <div class="d-flex justify-content-between bt mt-3 pt-2" style="font-size:.8rem">
-                <span class="muted">EXPECTED <b style="color:var(--text-main)">${rData.exp.toFixed(1)} PTS</b></span>
+                <span class="muted">EXPECTED (XPT) <b style="color:var(--text-main)">${rData.exp.toFixed(1)}</b></span>
                 <span class="muted">ACCURACY <b class="${accClass(+acc)}">${acc}%</b></span>
             </div>
         </div>`;

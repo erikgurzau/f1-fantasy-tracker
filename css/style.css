@@ -1,6 +1,6 @@
 :root {
-    --bg-base:    #181a1b;
-    --bg-surface: #242729;
+    --bg-base:    #111314;
+    --bg-surface: #1c1f21;
     --bg-hover:   #2f3336;
     --text-main:  #e8e6e3;
     --text-muted: #a8a39d;
@@ -15,7 +15,7 @@
 }
 * { border-radius:0!important; box-shadow:none!important; font-family:'JetBrains Mono',monospace; }
 html { font-size:16px; }
-body { background:var(--bg-base); color:var(--text-main); padding-bottom:56px; font-size:1.05rem; }
+body { background:var(--bg-base); color:var(--text-main); padding-bottom:0; font-size:1.05rem; }
 .wrap { max-width:900px; margin:0 auto; }
 
 .neg  { color:var(--neg)!important; }
@@ -35,21 +35,24 @@ body { background:var(--bg-base); color:var(--text-main); padding-bottom:56px; f
 /* ── BANNER ── */
 .banner {
     background:var(--bg-surface); border:1px solid var(--border);
-    border-left:3px solid var(--accent); padding:1rem 1.1rem; margin-bottom:1.5rem;
+    margin-bottom:1.5rem;
 }
 .progress-bar-bg  { height:3px; background:var(--border); margin-bottom:1rem; }
 .progress-bar-fill{ height:100%; background:var(--accent); }
-.banner-last { margin-bottom:.9rem; }
-.banner-sep  { height:1px; background:var(--border); margin-bottom:.9rem; }
+.banner-sep  { height:1px; background:var(--border); }
+.banner-left {  border-left: 3px solid var(--accent);}
 .banner-next-label { font-size:.82rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); margin-bottom:.35rem; }
 .banner-sess-label { font-size:.8rem; color:var(--text-muted); margin-bottom:.5rem; }
 
 /* countdown */
 .cd-wrap   { display:flex; align-items:flex-start; gap:.3rem; }
-.cd-block  { text-align:center; min-width:46px; }
-.cd-digits { font-size:1.75rem; font-weight:700; line-height:1; }
+.cd-block  { text-align:center; min-width:46px; background:#0d0f10; padding:.35rem .4rem; }
+.cd-digits { font-size:1.75rem; font-weight:700; line-height:1; color:var(--accent); }
 .cd-unit   { font-size:.68rem; color:var(--text-muted); text-transform:uppercase; margin-top:2px; }
 .cd-sep    { font-size:1.4rem; font-weight:700; color:var(--border); padding-top:3px; }
+@keyframes livepulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+.live-badge { display:inline-flex; align-items:center; gap:.4rem; font-size:.82rem; font-weight:700; color:var(--neg); letter-spacing:.08em; text-transform:uppercase; animation:livepulse 1.4s ease-in-out infinite; }
+.live-dot   { width:8px; height:8px; background:var(--neg); border-radius:50%!important; flex-shrink:0; }
 
 /* ── STANDINGS ── */
 .standings-header,
@@ -63,15 +66,14 @@ body { background:var(--bg-base); color:var(--text-main); padding-bottom:56px; f
 .standings-header { border-bottom:1px solid var(--border); background:var(--bg-surface); padding-top:.55rem; padding-bottom:.55rem; }
 .standings-row { border-bottom:1px solid var(--border); transition:background .1s; }
 .standings-row:last-child { border-bottom:none; }
-.standings-row:hover { background:var(--bg-hover); }
 .standings-row.leader-row { border-left:3px solid var(--warn); }
 .standings-main { cursor:pointer; }
 .s-rank { font-size:.88rem; color:var(--text-muted); text-align:center; }
-.s-name { font-weight:700; font-size:1.08rem; }
-.s-pts  { font-weight:700; font-size:1.08rem; color:var(--text-main); text-align:right; }
+.s-name { font-weight:700; font-size:1rem; }
+.s-pts  { font-weight:700; font-size:1rem; color:var(--text-main); text-align:right; }
 .s-wins { font-size:.85rem; color:var(--text-muted); text-align:right; }
 .s-gap  { font-size:.85rem; text-align:right; }
-.s-chevron { font-size:.78rem; color:var(--text-muted); transition:transform .2s; display:inline-block; margin-left:5px; vertical-align:middle; }
+.s-chevron { font-size:.78rem; color:var(--text-muted); transition:transform .2s; display:inline-block; margin-right:6px; vertical-align:middle; }
 .s-chevron.open { transform:rotate(180deg); }
 
 /* accordion */
@@ -108,19 +110,19 @@ body { background:var(--bg-base); color:var(--text-main); padding-bottom:56px; f
 }
 .carousel::-webkit-scrollbar { display:none; }
 .race-card {
-    flex-shrink:0; scroll-snap-align:start; width:106px;
+    flex-shrink:0; scroll-snap-align:start; width:106px; min-height:130px;
     border:1px solid var(--border); background:var(--bg-surface);
     padding:.65rem .7rem .55rem; cursor:pointer;
     transition:border-color .15s, background .15s;
     position:relative; display:flex; flex-direction:column; gap:.25rem;
     overflow:hidden;
 }
-.race-card.is-done { background:rgba(96,182,142,.09); }
-.race-card.is-done:hover { background:rgba(96,182,142,.17); }
+.race-card.is-done { }
+.race-card.is-done:hover { background:var(--bg-hover); }
 .race-card.is-current { border-color:var(--accent); }
-.race-card.is-cancelled { border-left:3px solid var(--neg); pointer-events:none; opacity:.65; }
+.race-card.is-cancelled { pointer-events:none; opacity:.65; }
 .race-card:hover { background:var(--bg-hover); }
-.race-card.active { border-color:var(--accent); }
+.race-card.active { border: 3px solid var(--accent); }
 .race-card.active::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:var(--accent); }
 .race-card.is-done.active { border-color:var(--pos); }
 .race-card.is-done.active::before { background:var(--pos); }
@@ -131,7 +133,7 @@ body { background:var(--bg-base); color:var(--text-main); padding-bottom:56px; f
 .rc-flag   { margin:.2rem 0 .1rem; }
 .rc-flag img { width:32px; height:20px; border:1px solid var(--border); display:block; }
 .rc-name   { font-size:.74rem; font-weight:700; line-height:1.25; }
-.rc-status { font-size:.64rem; text-transform:uppercase; letter-spacing:.04em; margin-top:.2rem; }
+.rc-status { font-size:.64rem; text-transform:uppercase; letter-spacing:.04em; margin-top:auto; padding-top:.3rem; }
 .rc-status.completed { color:var(--pos); }
 .rc-status.current   { color:var(--accent); }
 .rc-status.cancelled { color:var(--neg); font-weight:700; }
@@ -157,8 +159,49 @@ body { background:var(--bg-base); color:var(--text-main); padding-bottom:56px; f
 .scrubber-thumb  { position:absolute; top:50%; transform:translate(-50%,-50%); width:12px; height:12px; background:var(--accent); border:2px solid var(--bg-base); }
 
 /* ── RACE HUB ── */
-.hub-row    { display:grid; grid-template-columns:1fr 74px 74px; gap:.5rem; align-items:center; padding:.42rem 0; font-size:.92rem; }
+.hub-row    { display:grid; grid-template-columns:1fr 74px 74px; gap:.5rem; align-items:center; padding:.2rem 0; font-size:.92rem; }
 .hub-row-hd { font-size:.75rem; color:var(--text-muted); text-transform:uppercase; }
 .hub-row > div:nth-child(2),
 .hub-row > div:nth-child(3) { text-align:right; padding-right:.2rem; }
 .driver-tag { border-left:2px solid; padding-left:7px; display:flex; align-items:center; }
+
+/* race card date */
+.rc-date { font-size:.6rem; color:var(--text-muted); margin-top:1px; }
+
+/* race card overlays */
+.rc-overlay-done {
+    position:absolute; inset:0; pointer-events:none;
+    background:rgba(96,182,142,.13);
+    display:flex; align-items:flex-end; justify-content:flex-end;
+    padding:.3rem .35rem;
+}
+.rc-overlay-done i { font-size:.9rem; color:var(--pos); opacity:.7; }
+.rc-overlay-cancelled {
+    position:absolute; inset:0; pointer-events:none;
+    background:rgba(255,110,100,.07);
+    display:flex; align-items:center; justify-content:center;
+}
+
+/* chevron left */
+
+/* ── FOOTER ── */
+.footer-db {
+    border-top:1px solid var(--border);
+    background:var(--bg-surface);
+    padding:.75rem 0;
+    margin-top:2rem;
+}
+.footer-inner {
+    display:flex; align-items:center; justify-content:space-between;
+    flex-wrap:wrap; gap:.5rem;
+    font-size:.72rem;
+}
+.footer-title  { font-weight:700; color:var(--text-muted); letter-spacing:.06em; }
+.footer-sep    { margin:0 .4rem; color:var(--border); }
+.footer-author { color:var(--text-muted); }
+.footer-link {
+    color:var(--accent); text-decoration:none; letter-spacing:.04em;
+    font-size:.7rem; text-transform:uppercase;
+    transition:opacity .15s;
+}
+.footer-link:hover { opacity:.7; color:var(--accent); }
