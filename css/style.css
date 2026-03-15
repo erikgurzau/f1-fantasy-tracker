@@ -48,7 +48,7 @@ body { background:var(--bg-base); color:var(--text-main); padding-bottom:0; font
 /* countdown */
 .cd-wrap   { display:flex; align-items:flex-start; gap:.3rem; }
 .cd-block  { text-align:center; min-width:46px; padding:.35rem .4rem; }
-.cd-digits { font-size:1.75rem; font-weight:700; line-height:1; color:var(--accent); }
+.cd-digits { font-size:1.75rem; font-weight:700; line-height:1; }
 .cd-unit   { font-size:.68rem; color:var(--text-muted); text-transform:uppercase; margin-top:2px; }
 .cd-sep    { font-size:1.4rem; font-weight:700; color:var(--border); padding-top:3px; }
 @keyframes livepulse { 0%,100%{opacity:1} 50%{opacity:.4} }
