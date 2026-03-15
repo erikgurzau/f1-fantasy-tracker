@@ -47,6 +47,7 @@ function getRoundStatus(r) {
     if (isRoundComplete(r))      return 'completed';
     if (isRoundPartial(r))       return 'current';
     if (currentRound && r.id === currentRound.id) return 'current';
+    if (nextRound && r.id === nextRound.id) return 'next';
     return 'upcoming';
 }
 
@@ -62,6 +63,15 @@ function deriveCurrentRound() {
     }
     if (lastIdx >= 0) return REG.rounds[lastIdx];
     return REG.rounds.find(r => r.status !== 'cancelled') ?? null;
+}
+
+function deriveNextRound(current) {
+    if (!current) return null;
+    const currentIndex = REG.rounds.findIndex(r => r.id === current.id);
+    for (let i = currentIndex + 1; i < REG.rounds.length; i++) {
+        if (REG.rounds[i].status !== 'cancelled') return REG.rounds[i];
+    }
+    return null;
 }
 
 // ── PRICE / PRECOMPUTE ────────────────────────────────────
@@ -261,7 +271,7 @@ function renderBanner() {
     const lastCc = last ? (last.cc ?? 'un') : '';
     const lastBlock = `
         <div class="px-3 pb-3">
-            <div class="label" style="margin-bottom:.3rem">LAST ROUND</div>
+            <div class="label" style="margin-bottom:.3rem">LAST_ROUND</div>
             <div class="rc-flag fw-bold" style="display:flex;align-items:center;gap:.6rem;">
                 ${last ? `<img src="https://flagcdn.com/w40/${lastCc}.png" alt="${last.name}">` : ''}
                 ${last ? last.name.toUpperCase() : 'N/A'}
@@ -454,7 +464,7 @@ function renderCarousel() {
             ${overlay}
             <div class="rc-round">
                 <div class="rc-round-left">
-                    <span class="dot ${dotMap[status] ?? 'dot-upcoming'}"></span>
+                    <span class="dot ${dotMap[status] ?? dotMap.upcoming}"></span>
                     <span>R${pad(r.n)}</span>
                 </div>
                 ${sprintBadge}
@@ -464,7 +474,7 @@ function renderCarousel() {
             </div>
             <div class="rc-name">${r.name}</div>
             <div class="rc-date">${r.date}</div>
-            <div class="rc-status ${status}">${stLabel[status] ?? ''}</div>
+            <div class="rc-status ${status}">${status}</div>
         </div>`;
     }).join('');
 
@@ -562,11 +572,6 @@ function renderHub() {
     const cc     = round.cc ?? 'un';
     const flag   = `<img src="https://flagcdn.com/w40/${cc}.png" class="card-db-flag" alt="${round.name}"> `;
 
-    if (status === 'cancelled') {
-        hub.innerHTML = `<div class="card-db text-center muted py-4" style="border-left:3px solid var(--neg)">
-            <i class="bi bi-x-circle me-2" style="color:var(--neg)"></i>RACE_CANCELLED &mdash; Round annullato dal calendario</div>`;
-        return;
-    }
     if (status === 'upcoming') {
         hub.innerHTML = `<div class="card-db text-center py-4">
             <div class="label mb-2">R${pad(round.n)} — UPCOMING ${round.fmt === 'spr' ? '— <span style="font-size:.82rem;color:var(--warn);font-weight:700">SPRINT</span>' : ''}</div>
@@ -580,7 +585,7 @@ function renderHub() {
     const rd = RESULTS[round.id];
     if (!rd) {
         hub.innerHTML = `<div class="card-db text-center py-4">
-            <div class="label mb-2">R${pad(round.n)} — CURRENT ${round.fmt === 'spr' ? '— <span style="font-size:.82rem;color:var(--warn);font-weight:700">SPRINT</span>' : ''}</div>
+            <div class="label mb-2">R${pad(round.n)} — ${status.toUpperCase()} ${round.fmt === 'spr' ? '— <span style="font-size:.82rem;color:var(--warn);font-weight:700">SPRINT</span>' : ''}</div>
             <div style="font-size:1.15rem;font-weight:700">${flag}${round.name.toUpperCase()}</div>
             <div class="label mt-1 mb-3 pb-3" style="border-bottom: 1px solid var(--border)">${round.date}</div>
             ${allSessionsHtml(round)}
@@ -670,6 +675,7 @@ window.onload = async () => {
 
     activeKey = key;
     currentRound = deriveCurrentRound();
+    nextRound = deriveNextRound(currentRound);
     precompute();
 
     document.getElementById('app-subtitle').textContent = `F1_FANTASY_TRACKER // ${REG.season}`;

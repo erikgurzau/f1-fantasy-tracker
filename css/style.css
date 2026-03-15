@@ -38,10 +38,10 @@ body { background:var(--bg-base); color:var(--text-main); padding-bottom:0; font
     background:var(--bg-surface); border:1px solid var(--border);
     margin-bottom:1.5rem;
 }
-.progress-bar-bg  { height:3px; background:var(--border); margin-bottom:1rem; }
+.progress-bar-bg  { height:7px; background:var(--border); margin-bottom:1rem; }
 .progress-bar-fill{ height:100%; background:var(--accent); }
 .banner-sep  { height:1px; background:var(--border); }
-.banner-left {  border-left: 3px solid var(--accent);}
+.banner-left {  border-left: 1px solid var(--accent);}
 .banner-next-label { font-size:.82rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); margin-bottom:.35rem; }
 .banner-sess-label { font-size:.8rem; color:var(--text-muted); margin-bottom:.5rem; }
 
@@ -62,7 +62,7 @@ body { background:var(--bg-base); color:var(--text-main); padding-bottom:0; font
     grid-template-columns: 28px 1fr 68px 38px 60px;
     align-items:center;
     gap:.4rem;
-    padding:.65rem .85rem;
+    padding:.65rem .85rem .65rem 0;
 }
 .standings-header { border-bottom:1px solid var(--border); background:var(--bg-surface); padding-top:.55rem; padding-bottom:.55rem; }
 .standings-row { border-bottom:1px solid var(--border); transition:background .1s; }
@@ -122,16 +122,16 @@ body { background:var(--bg-base); color:var(--text-main); padding-bottom:0; font
 .rc-spr-badge  { font-size:.52rem; color:var(--warn); font-weight:700; letter-spacing:.04em; flex-shrink:0; }
 .rc-flag   { margin:.2rem 0 .1rem; }
 .rc-flag img { width:32px; height:20px; border:1px solid var(--border); display:block; }
-.rc-name   { font-size:.74rem; font-weight:700; line-height:1.25; }
+.rc-name   { font-size:.74rem; font-weight:700; line-height:1.25; text-transform: uppercase;}
 .rc-status { font-size:.64rem; text-transform:uppercase; letter-spacing:.04em; margin-top:auto; padding-top:.3rem; }
 .rc-status.completed { color:var(--pos); }
 .rc-status.current   { color:var(--accent); }
-.rc-status.upcoming  { color:var(--text-muted); }
+.rc-status.upcoming, .rc-status.next  { color:var(--text-muted); }
 .rc-status.cancelled { color:var(--neg); font-weight:700; }
 .dot { width:6px; height:6px; border-radius:50%!important; display:inline-block; flex-shrink:0; }
 .dot-completed { background:var(--pos); }
 .dot-current   { background:var(--accent); animation:blink 1s step-start infinite; }
-.dot-upcoming  { background:var(--border); }
+.dot-upcoming, .dot-next  { background:var(--border); }
 .dot-cancelled { background:var(--neg); }
 
 /* controls bar */
@@ -155,6 +155,7 @@ body { background:var(--bg-base); color:var(--text-main); padding-bottom:0; font
 .hub-row-hd { font-size:.75rem; color:var(--text-muted); text-transform:uppercase; }
 .hub-row > div:nth-child(2),
 .hub-row > div:nth-child(3) { text-align:right; padding-right:.2rem; }
+.hub-row.price-row .pos, .hub-row.price-row .neg, .detail-total-val .pos, .detail-total-val .neg {margin-right: 5px;}
 .driver-tag { border-left:2px solid; padding-left:7px; display:flex; align-items:center; }
 
 /* race card date */
@@ -163,14 +164,14 @@ body { background:var(--bg-base); color:var(--text-main); padding-bottom:0; font
 /* race card overlays */
 .rc-overlay-done {
     position:absolute; inset:0; pointer-events:none;
-    background:rgba(96,182,142,.13);
+    background:rgba(96,182,142,.2);
     display:flex; align-items:flex-end; justify-content:flex-end;
     padding:.3rem .35rem;
 }
 .rc-overlay-done i { font-size:.9rem; color:var(--pos); opacity:.7; }
 .rc-overlay-cancelled {
     position:absolute; inset:0; pointer-events:none;
-    background:rgba(255,110,100,.07);
+    background:rgba(255,110,100,.2);
     display:flex; align-items:center; justify-content:center;
 }
 
