@@ -250,7 +250,7 @@ function renderUpdatedStatus(now) {
 function renderBanner() {
     const completed = REG.rounds.filter(r => isRoundComplete(r)).length;
     const inProgress = REG.rounds.filter(r => isRoundPartial(r)).length;
-    const total     = REG.rounds.filter(r => r.status !== 'cancelled').length;
+    const total     = REG.rounds.length; // all 24 rounds
     const current   = currentRound ? currentRound.n : completed + inProgress;
     const pct       = Math.round(current / total * 100);
     const last      = lastCompletedRound();
@@ -290,13 +290,13 @@ function renderBanner() {
             nextBlock = `
             <div class="banner-sep"></div>
             <div class="banner-left p-3">
-                <div class="banner-next-label">CURRENT ROUND</div>
+                <div class="banner-next-label">CURRENT_ROUND</div>
                 <div class="rc-flag" style="display:flex;align-items:center;gap:.6rem;margin-bottom:.35rem">
                     <img src="https://flagcdn.com/w40/${next.cc ?? 'un'}.png" alt="${next.name}">
                     ${next.name.toUpperCase()}
                 </div>
                 <div class="banner-sess-label">
-                    <i class="bi bi-clock me-1 align-middle"></i><span style="margin-left:.2rem">${sess.label}</span>
+                    <i class="bi bi-clock me-1 align-middle"></i><span style="color:var(--text-main);margin-left:.2rem">${sess.label}</span>
                     <span style="color:var(--text-muted);font-size:.75rem">— ${new Date(sess.iso).toLocaleDateString('it-IT',{day:'2-digit',month:'short'}).toUpperCase()}, ${new Date(sess.iso).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}</span>
                 </div>
                 <div class="cd-wrap" id="cd-wrap-live">
@@ -401,7 +401,7 @@ function renderStandings() {
         html += `<div class="standings-row${isLeader ? ' leader-row' : ''}">
             <div class="standings-main" onclick="toggleDetail('sd-${p.code}',this)">
                 <div class="s-rank">${p.rank}</div>
-                <div class="s-name"><i class="bi bi-chevron-down s-chevron"></i>${p.code}<span style="font-size:.7rem;font-weight:400;color:var(--text-muted);margin-left:6px">${p.name}</span></div>
+                <div class="s-name">${p.code}<span style="font-size:.7rem;font-weight:400;color:var(--text-muted);margin-left:6px">${p.name}</span><i class="bi bi-chevron-down s-chevron"></i></div>
                 <div class="s-pts" style="color:${isLeader ? 'var(--warn)' : 'var(--text-main)'}">${p.totalPts}</div>
                 <div class="s-wins">${p.wins}</div>
                 <div class="s-gap">${gapHtml}</div>
@@ -430,7 +430,7 @@ function toggleDetail(id, rowEl) {
 function renderCarousel() {
     const el      = document.getElementById('carousel');
     const dotMap  = { completed:'dot-completed', current:'dot-current', upcoming:'dot-upcoming', cancelled:'dot-cancelled' };
-    const stLabel = { completed:'DONE', current:'CURRENT', cancelled:'CANCELLED' };
+    const stLabel = { completed:'DONE', current:'CURRENT', upcoming:'UPCOMING', cancelled:'CANCELLED' };
 
     el.innerHTML = REG.rounds.map(r => {
         const status  = getRoundStatus(r);
@@ -450,7 +450,7 @@ function renderCarousel() {
             : status === 'cancelled'
             ? `<div class="rc-overlay-cancelled"></div>`
             : '';
-        return `<div class="${classes}" onclick="selectRace('${r.id}')">
+        return `<div class="${classes}" data-round-id="${r.id}" onclick="selectRace('${r.id}')">
             ${overlay}
             <div class="rc-round">
                 <div class="rc-round-left">
@@ -464,7 +464,7 @@ function renderCarousel() {
             </div>
             <div class="rc-name">${r.name}</div>
             <div class="rc-date">${r.date}</div>
-            ${stLabel[status] ? `<div class="rc-status ${status}">${stLabel[status]}</div>` : ''}
+            <div class="rc-status ${status}">${stLabel[status] ?? ''}</div>
         </div>`;
     }).join('');
 
@@ -478,10 +478,11 @@ function renderCarousel() {
             container.scrollLeft = Math.max(0, center);
         }
         setTimeout(syncScrubber, 100);
+        setTimeout(updateCurrentBtn, 500);
     }, 60);
 
     if (!el._scrubListening) {
-        el.addEventListener('scroll', syncScrubber, { passive: true });
+        el.addEventListener('scroll', () => { syncScrubber(); updateCurrentBtn(); }, { passive: true });
         el._scrubListening = true;
     }
 }
@@ -511,6 +512,46 @@ function scrubberClick(e) {
 }
 function selectRace(id) { selectedRound = id; renderCarousel(); renderHub(); }
 
+function updateCurrentBtn() {
+    const btn = document.getElementById('btn-goto-current');
+    if (!btn || !currentRound) { if (btn) btn.style.display = 'none'; return; }
+    const el   = document.getElementById('carousel');
+    const card = el?.querySelector(`[data-round-id="${currentRound.id}"]`);
+    if (!card) { btn.style.display = 'none'; return; }
+    const cr = el.getBoundingClientRect();
+    const cc = card.getBoundingClientRect();
+    btn.style.display = (cc.left < cr.right && cc.right > cr.left) ? 'none' : 'inline-flex';
+}
+
+function goToCurrent() {
+    if (!currentRound) return;
+    selectRace(currentRound.id);
+    const el   = document.getElementById('carousel');
+    const card = el?.querySelector(`[data-round-id="${currentRound.id}"]`);
+    if (card && el) {
+        const center = card.offsetLeft - (el.clientWidth / 2) + (card.offsetWidth / 2);
+        el.scrollTo({ left: Math.max(0, center), behavior: 'smooth' });
+    }
+}
+
+
+function allSessionsHtml(round) {
+    const order = sessionOrder(round.fmt);
+    const sess  = round.sessions ?? {};
+    const now   = Date.now();
+    return order.map(key => {
+        const iso = sess[key]; if (!iso) return '';
+        const start  = new Date(iso);
+        const isPast = start.getTime() < now;
+        const dateStr = start.toLocaleDateString('it-IT',{day:'2-digit',month:'short'}).toUpperCase();
+        const timeStr = start.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+        const labelColor = isPast ? 'var(--text-muted)' : 'var(--text-main)';
+        return `<div class="banner-sess-label" style="margin-bottom:.25rem;text-align:center">
+            <i class="bi bi-clock me-1 align-middle"></i><span style="color:${labelColor};margin-left:.2rem">${SESSION_LABELS[key] ?? key.toUpperCase()}</span>
+            <span style="color:var(--text-muted);font-size:.75rem"> — ${dateStr}, ${timeStr}</span>
+        </div>`;
+    }).join('');
+}
 // ── RACE HUB ──────────────────────────────────────────────
 function renderHub() {
     const round  = REG.rounds.find(r => r.id === selectedRound);
@@ -519,7 +560,7 @@ function renderHub() {
 
     const status = getRoundStatus(round);
     const cc     = round.cc ?? 'un';
-    const flag   = `<img src="https://flagcdn.com/w20/${cc}.png" style="height:13px;vertical-align:middle;margin-right:5px;border:1px solid var(--border)">`;
+    const flag   = `<img src="https://flagcdn.com/w40/${cc}.png" class="card-db-flag" alt="${round.name}"> `;
 
     if (status === 'cancelled') {
         hub.innerHTML = `<div class="card-db text-center muted py-4" style="border-left:3px solid var(--neg)">
@@ -527,24 +568,22 @@ function renderHub() {
         return;
     }
     if (status === 'upcoming') {
-        const sess = nextSession(round);
         hub.innerHTML = `<div class="card-db text-center py-4">
-            <div class="label mb-2">GARA NON ANCORA DISPUTATA</div>
+            <div class="label mb-2">R${pad(round.n)} — UPCOMING ${round.fmt === 'spr' ? '— <span style="font-size:.82rem;color:var(--warn);font-weight:700">SPRINT</span>' : ''}</div>
             <div style="font-size:1.15rem;font-weight:700">${flag}${round.name.toUpperCase()}</div>
-            <div class="label mt-1">${round.date}${round.fmt === 'spr' ? ' &nbsp;|&nbsp; SPRINT_WEEKEND' : ''}</div>
-            ${sess ? `<div class="mt-2" style="font-size:.82rem;color:var(--text-muted)"><i class="bi bi-clock me-1"></i>Prossima sessione: <span style="color:var(--accent)">${sess.label}</span></div>` : ''}
+            <div class="label mt-1 mb-3 pb-3" style="border-bottom: 1px solid var(--border)">${round.date}</div>
+            ${allSessionsHtml(round)}
         </div>`;
         return;
     }
 
     const rd = RESULTS[round.id];
     if (!rd) {
-        const sess = nextSession(round);
         hub.innerHTML = `<div class="card-db text-center py-4">
-            <div class="label mb-2">CURRENT ROUND</div>
+            <div class="label mb-2">R${pad(round.n)} — CURRENT ${round.fmt === 'spr' ? '— <span style="font-size:.82rem;color:var(--warn);font-weight:700">SPRINT</span>' : ''}</div>
             <div style="font-size:1.15rem;font-weight:700">${flag}${round.name.toUpperCase()}</div>
-            <div class="label mt-1">${round.date}${round.fmt === 'spr' ? ' &nbsp;|&nbsp; SPRINT_WEEKEND' : ''}</div>
-            ${sess ? `<div class="mt-2" style="font-size:.8rem;color:var(--text-muted)"><i class="bi bi-clock me-1"></i>NEXT_SESSION<span class="footer-sep">//</span><span style="color:var(--accent)">${sess.label}</span></div>` : ''}
+            <div class="label mt-1 mb-3 pb-3" style="border-bottom: 1px solid var(--border)">${round.date}</div>
+            ${allSessionsHtml(round)}
         </div>`;
         return;
     }

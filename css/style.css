@@ -29,6 +29,7 @@ body { background:var(--bg-base); color:var(--text-main); padding-bottom:0; font
 @keyframes blink { 50%{opacity:0} }
 
 .card-db { background:var(--bg-surface); border:1px solid var(--border); padding:1.1rem; margin-bottom:1rem; }
+.card-db-flag { width:32px; height:20px; border:1px solid var(--border); margin-bottom: 4px;}
 .x2 { background:rgba(227,179,65,.15); color:var(--warn); padding:.15rem .4rem; font-weight:700; font-size:.75rem; margin-left:5px; }
 .subtitle { font-size:.82rem; color:var(--text-muted); margin-top:2px; }
 
@@ -73,7 +74,7 @@ body { background:var(--bg-base); color:var(--text-main); padding-bottom:0; font
 .s-pts  { font-weight:700; font-size:1rem; color:var(--text-main); text-align:right; }
 .s-wins { font-size:.85rem; color:var(--text-muted); text-align:right; }
 .s-gap  { font-size:.85rem; text-align:right; }
-.s-chevron { font-size:.78rem; color:var(--text-muted); transition:transform .2s; display:inline-block; margin-right:6px; vertical-align:middle; }
+.s-chevron { font-size:.78rem; color:var(--text-muted); transition:transform .2s; display:inline-block; margin-left:6px; vertical-align:middle; }
 .s-chevron.open { transform:rotate(180deg); }
 
 /* accordion */
@@ -100,7 +101,7 @@ body { background:var(--bg-base); color:var(--text-main); padding-bottom:0; font
 }
 .carousel::-webkit-scrollbar { display:none; }
 .race-card {
-    flex-shrink:0; scroll-snap-align:start; width:106px; min-height:130px;
+    flex-shrink:0; scroll-snap-align:start; width:120px; min-height:130px;
     border:1px solid var(--border); background:var(--bg-surface);
     padding:.65rem .7rem .55rem; cursor:pointer;
     transition:border-color .15s, background .15s;
@@ -112,11 +113,10 @@ body { background:var(--bg-base); color:var(--text-main); padding-bottom:0; font
 .race-card.is-current { border-color:var(--accent); }
 .race-card.is-cancelled { pointer-events:none; opacity:.65; }
 .race-card:hover { background:var(--bg-hover); }
-.race-card.active { border: 3px solid var(--accent); }
-.race-card.active::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:var(--accent); }
+.race-card.active { outline: 2px solid var(--accent); outline-offset:-1px; }
 .race-card.is-done.active { border-color:var(--pos); }
-.race-card.is-done.active::before { background:var(--pos); }
-.race-card.is-current.active::before { background:var(--accent); }
+.race-card.is-done.active    { outline-color:var(--pos); }
+.race-card.is-current.active  { outline-color:var(--accent); }
 .rc-round  { font-size:.68rem; color:var(--text-muted); display:flex; align-items:center; justify-content:space-between; gap:.3rem; }
 .rc-round-left { display:flex; align-items:center; gap:.3rem; }
 .rc-spr-badge  { font-size:.52rem; color:var(--warn); font-weight:700; letter-spacing:.04em; flex-shrink:0; }
@@ -126,6 +126,7 @@ body { background:var(--bg-base); color:var(--text-main); padding-bottom:0; font
 .rc-status { font-size:.64rem; text-transform:uppercase; letter-spacing:.04em; margin-top:auto; padding-top:.3rem; }
 .rc-status.completed { color:var(--pos); }
 .rc-status.current   { color:var(--accent); }
+.rc-status.upcoming  { color:var(--text-muted); }
 .rc-status.cancelled { color:var(--neg); font-weight:700; }
 .dot { width:6px; height:6px; border-radius:50%!important; display:inline-block; flex-shrink:0; }
 .dot-completed { background:var(--pos); }
