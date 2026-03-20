@@ -67,20 +67,20 @@
         {
             "key":"predestinati","name":"PREDESTINATI",
             "players":[
-                {"code":"ERI","name":"Erik","team":{"constructors":["MCL","FER"],"captain":"ANT","drivers":["BOR","COL","PER","BOT"]}},
-                {"code":"PIE","name":"Pietro","team":{"constructors":["FER","HAA"],"captain":"LEC","drivers":["PIA","BEA","HUL","LAW"]}},
-                {"code":"AMA","name":"Aman","team":{"constructors":["FER","VRB"],"captain":"LEC","drivers":["VER","BEA","LAW","PER"]}},
-                {"code":"LOR","name":"Lorenzo","team":{"constructors":["MER","VRB"],"captain":"RUS","drivers":["GAS","SAI","OCO","BOT"]}}
+                {"code":"ERI","name":"ᴋᴇʙᴀʙ ᴄʀᴇᴀᴛɪɴᴇ ᴛᴇᴀᴍ","team":{"constructors":["MCL","FER"],"captain":"ANT","drivers":["BOR","COL","PER","BOT"]}},
+                {"code":"PIE","name":"Next Year Since 2008","team":{"constructors":["FER","HAA"],"captain":"LEC","drivers":["PIA","BEA","HUL","LAW"]}},
+                {"code":"AMA","name":"Aman's Siumm 60M Scuderia","team":{"constructors":["FER","VRB"],"captain":"LEC","drivers":["VER","BEA","LAW","PER"]}},
+                {"code":"LOR","name":"PowerBank Mercedes 2026","team":{"constructors":["MER","VRB"],"captain":"RUS","drivers":["GAS","SAI","OCO","BOT"]}}
             ]
         },
         {
             "key":"mega-f1-rete",
             "name":"MEGA-F1-RETE",
             "players":[
-                {"code":"ERI","name":"Erik","team":{"constructors":["MER","FER"],"captain":"LEC","drivers":["LAW","COL","PER","BOT"]}},
-                {"code":"ROS","name":"Rosario","team":{"constructors":["FER","VRB"],"captain":"VER","drivers":["LEC","BEA","COL","LIN"]}},
-                {"code":"AND","name":"Andrea","team":{"constructors":["MER","VRB"],"captain":"LEC","drivers":["HAD","SAI","BEA","COL"]}},
-                {"code":"LUC","name":"Luca","team":{"constructors":["MER","AUD"],"captain":"LEC","drivers":["HAD","SAI","BEA","LIN"]}}
+                {"code":"ERI","name":"Pollo e Creatina F1 Team","team":{"constructors":["MER","FER"],"captain":"LEC","drivers":["LAW","COL","PER","BOT"]}},
+                {"code":"ROS","name":"F1 Rosss Team","team":{"constructors":["FER","VRB"],"captain":"VER","drivers":["LEC","BEA","COL","LIN"]}},
+                {"code":"AND","name":"mazespin66666666666666","team":{"constructors":["MER","VRB"],"captain":"LEC","drivers":["HAD","SAI","BEA","COL"]}},
+                {"code":"LUC","name":"SatisF1","team":{"constructors":["MER","AUD"],"captain":"LEC","drivers":["HAD","SAI","BEA","LIN"]}}
             ]
         }
     ]
