@@ -67,7 +67,7 @@
         {
             "key":"predestinati","name":"PREDESTINATI",
             "players":[
-                {"code":"ERI","name":"ᴋᴇʙᴀʙ ᴄʀᴇᴀᴛɪɴᴇ ᴛᴇᴀᴍ","team":{"constructors":["MCL","FER"],"captain":"ANT","drivers":["BOR","COL","PER","BOT"]}},
+                {"code":"ERI","name":"Kebab Creatine Team","team":{"constructors":["MCL","FER"],"captain":"ANT","drivers":["BOR","COL","PER","BOT"]}},
                 {"code":"PIE","name":"Next Year Since 2008","team":{"constructors":["FER","HAA"],"captain":"LEC","drivers":["PIA","BEA","HUL","LAW"]}},
                 {"code":"AMA","name":"Aman's Siumm 60M Scuderia","team":{"constructors":["FER","VRB"],"captain":"LEC","drivers":["VER","BEA","LAW","PER"]}},
                 {"code":"LOR","name":"PowerBank Mercedes 2026","team":{"constructors":["MER","VRB"],"captain":"RUS","drivers":["GAS","SAI","OCO","BOT"]}}
