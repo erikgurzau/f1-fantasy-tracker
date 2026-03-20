@@ -21,6 +21,7 @@
  "china": {
     "last_update": "2026-03-15T10:04:51.255419Z",
     "updated_to": "race",
+    "status": "updated",
     "drivers": {
       "ALB":{"pts":-7, "exp":-0.3, "price":11.4},"ALO":{"pts":-7, "exp":-14.2, "price":9.4},
       "ANT":{"pts":68, "exp":36.5, "price":23.5},"BEA":{"pts":34, "exp":8.8, "price":8},
