@@ -1,8 +1,29 @@
 // ── INIT ──────────────────────────────────────────────────
 // Entry point — all logic lives in the other modules.
 
+let activeTab = 'overview';
+const tabRendered = { overview: false, stats: false, h2h: false };
+
+function switchTab(name) {
+    // Update buttons
+    document.querySelectorAll('.nav-tab').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('onclick').includes(`'${name}'`));
+    });
+    // Update panes
+    document.querySelectorAll('.nav-pane').forEach(pane => {
+        pane.classList.toggle('active', pane.id === `pane-${name}`);
+    });
+    activeTab = name;
+    // Lazy render on first visit
+    if (!tabRendered[name]) {
+        tabRendered[name] = true;
+        if (name === 'stats') renderStats();
+        if (name === 'h2h')   renderH2H();
+    }
+}
+
 window.onload = async () => {
-    await loadData();
+    await bootRun(loadData());
 
     const key = new URLSearchParams(window.location.search).get('key');
     const lg  = key ? REG.championships.find(c => c.key === key) : null;
@@ -30,6 +51,7 @@ window.onload = async () => {
 
     activeKey    = key;
     currentRound = deriveCurrentRound();
+    nextRound = deriveNextRound();
     precompute();
 
     document.getElementById('app-subtitle').textContent = `F1_FANTASY_TRACKER // ${REG.season}`;
@@ -37,6 +59,7 @@ window.onload = async () => {
     document.title = `${lg.name} // F1_FANTASY_TRACKER ${REG.season}`;
 
     selectedRound = currentRound?.id ?? REG.rounds[0].id;
+    tabRendered.overview = true;
 
     startClock();
     renderBanner();

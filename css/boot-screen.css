@@ -1,0 +1,93 @@
+/* ── BOOT SCREEN ─────────────────────────────────────────── */
+#boot-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background: var(--bg-base);
+    font-family: 'JetBrains Mono', monospace;
+    padding: 1rem 2rem;
+    transition: opacity .3s ease, visibility .3s ease;
+}
+
+#boot-screen.boot-hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.boot-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    max-width: 700px;
+}
+
+.boot-line {
+    font-size: .82rem;
+    line-height: 1.8;
+    color: var(--text-muted);
+    opacity: 0;
+    transition: opacity .08s ease;
+}
+.boot-line.boot-show { opacity: 1; }
+
+.boot-line .boot-prompt { color: var(--pos); }
+.boot-line .boot-cmd    { color: var(--text-main); }
+.boot-line .boot-ok     { color: var(--pos); font-weight: 700; }
+.boot-line .boot-acc    { color: var(--accent); }
+.boot-line .boot-dim    { color: var(--text-muted); }
+.boot-line .boot-warn   { color: var(--warn); }
+
+.boot-cursor {
+    display: inline-block;
+    width: 7px;
+    height: .85em;
+    background: var(--accent);
+    vertical-align: middle;
+    margin-left: 2px;
+    animation: bootblink .85s step-end infinite;
+}
+@keyframes bootblink { 50% { opacity: 0; } }
+
+/* progress bar — full width, flush to bottom */
+.boot-progress-wrap {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    opacity: 0;
+    margin-top: .4rem;
+    transition: opacity .15s;
+}
+.boot-progress-wrap.boot-show { opacity: 1; }
+
+.boot-progress-track {
+    flex: 1;
+    height: 2px;
+    background: var(--border);
+    overflow: hidden;
+}
+.boot-progress-fill {
+    height: 100%;
+    background: var(--accent);
+    width: 0%;
+    transition: width .08s linear;
+}
+.boot-progress-pct {
+    font-size: .72rem;
+    color: var(--accent);
+    min-width: 32px;
+    text-align: right;
+}
+
+/* version tag — mirrors .subtitle */
+.boot-version {
+    position: absolute;
+    top: 1.5rem;
+    left: 1rem;
+    font-size: .82rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}

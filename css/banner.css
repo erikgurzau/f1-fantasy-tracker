@@ -1,0 +1,67 @@
+/* ── BANNER ──────────────────────────────────────────────── */
+.banner {
+    background:var(--bg-surface); border:1px solid var(--border);
+    margin-bottom:1.5rem;
+}
+.progress-bar-bg   { height:3px; background:var(--border); margin-bottom:1rem; }
+.progress-bar-fill { height:100%; background:var(--accent); }
+.banner-sep        { height:1px; background:var(--border); }
+.banner-section-label { margin-bottom:.5rem; }
+
+.banner-round-flag {
+    display:flex; align-items:center; gap:.6rem;
+    font-weight:700; margin-bottom:.2rem;
+}
+.banner-completed-tag { font-size:.78rem; color:var(--pos); margin-top:.5rem; }
+
+.banner-last { }
+
+.banner-left {
+    position:relative;
+    padding-left:1.1rem;
+}
+.banner-left::before {
+    content:'';
+    position:absolute; left:0;
+    width:2px; background:var(--accent);
+    animation:borderTicker 2s ease-in-out infinite;
+}
+@keyframes borderTicker {
+    0%   { top:0;    height:8px; }
+    25%  { height:50px; }
+    50%  { top:96%;  height:8px; }
+    75%  { height:50px; }
+    100% { top:0;    height:8px; }
+}
+
+.banner-next-label  { font-size:.82rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); margin-bottom:.35rem; }
+.banner-sess-label  { font-size:.8rem; color:var(--text-muted); }
+.sess-row           { margin-bottom:.25rem; text-align:center; }
+.sess-label-name    { color:var(--text-main); }
+.sess-label-date    { color:var(--text-muted); font-size:.75rem; }
+.sess-past          { color:var(--text-muted); margin-left:.2rem; }
+.sess-future        { color:var(--text-main); margin-left:.2rem; }
+.sess-cancelled-msg { color:var(--text-muted); font-size:.8rem; }
+
+/* status label */
+.status-unknown { color:var(--text-muted); }
+.status-session { color:var(--text-muted); }
+
+/* countdown */
+.cd-wrap   { display:flex; align-items:flex-start; gap:.3rem; transform:translateX(-0.4rem); }
+.cd-block  { text-align:center; min-width:46px; padding:.65rem .35rem 0 .4rem; }
+.cd-digits { font-size:1.75rem; font-weight:700; line-height:1; }
+.cd-unit   { font-size:.68rem; color:var(--text-muted); text-transform:uppercase; margin-top:2px; }
+.cd-sep    { font-size:1.4rem; font-weight:700; color:var(--border); padding-top:3px; }
+
+@keyframes livepulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+.live-badge {
+    display:inline-flex; align-items:center; gap:.4rem;
+    font-size:.82rem; font-weight:700; color:var(--neg);
+    letter-spacing:.08em; text-transform:uppercase;
+    animation:livepulse 1.4s ease-in-out infinite;
+}
+.live-dot {
+    width:8px; height:8px; background:var(--neg);
+    border-radius:50%!important; flex-shrink:0;
+}

@@ -6,6 +6,7 @@ let activeKey    = null;
 let selectedRound = null;
 let cdInterval   = null;
 let currentRound = null;
+let nextRound    = null;
 
 function league() { return STATE[activeKey]; }
 
@@ -47,6 +48,7 @@ function getRoundStatus(r) {
     if (isRoundComplete(r))      return 'completed';
     if (isRoundPartial(r))       return 'current';
     if (currentRound && r.id === currentRound.id) return 'current';
+    if (nextRound && r.id === nextRound.id) return 'next';
     return 'upcoming';
 }
 
@@ -62,6 +64,15 @@ function deriveCurrentRound() {
     }
     if (lastIdx >= 0) return REG.rounds[lastIdx];
     return REG.rounds.find(r => r.status !== 'cancelled') ?? null;
+}
+
+function deriveNextRound(current = currentRound) {
+    if (!current) return null;
+    const idx = REG.rounds.findIndex(r => r.id === current.id);
+    for (let i = idx + 1; i < REG.rounds.length; i++) {
+        if (REG.rounds[i].status !== 'cancelled') return REG.rounds[i];
+    }
+    return null;
 }
 
 function lastCompletedRound() {

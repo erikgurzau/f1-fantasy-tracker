@@ -34,12 +34,6 @@ function renderCarousel() {
             ? `<div class="rc-overlay-cancelled"></div>`
             : '';
 
-        const statusLabel = (() => {
-            if (status !== 'upcoming') return stLabel[status] ?? '';
-            const firstUpcoming = REG.rounds.find(r => getRoundStatus(r) === 'upcoming');
-            return (firstUpcoming && r.id === firstUpcoming.id) ? 'NEXT' : 'UPCOMING';
-        })();
-
         return `
             <div class="${classes}" data-round-id="${r.id}" onclick="selectRace('${r.id}')">
                 ${overlay}
@@ -55,7 +49,7 @@ function renderCarousel() {
                 </div>
                 <div class="rc-name text-uppercase">${r.name}</div>
                 <div class="rc-date">${r.date}</div>
-                <div class="rc-status ${status}">${statusLabel}</div>
+                <div class="rc-status ${status}">${status}</div>
             </div>`;
     }).join('');
 

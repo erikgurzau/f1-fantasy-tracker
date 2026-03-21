@@ -1,0 +1,20 @@
+/* ── RACE HUB ────────────────────────────────────────────── */
+.hub-row { display:grid; grid-template-columns:1fr 74px 74px; gap:.5rem; align-items:center; padding:.2rem 0; font-size:.92rem; }
+.hub-row.price-row { grid-template-columns:1fr 90px 110px; }
+.hub-row-hd { font-size:.75rem; color:var(--text-muted); text-transform:uppercase; }
+.hub-section-sep { margin-top:.5rem; padding-top:.5rem; border-top:1px solid var(--border); }
+.hub-row > div:nth-child(2),
+.hub-row > div:nth-child(3) { text-align:right; padding-right:.2rem; }
+.hub-row.price-row .pos,
+.hub-row.price-row .neg,
+.detail-total-val .pos,
+.detail-total-val .neg { margin-right:5px; }
+
+.driver-tag { border-left:2px solid; padding-left:7px; display:flex; align-items:center; font-size:.92rem; }
+
+.hub-round-name { font-size:1.15rem; font-weight:700; display:flex; align-items:center; justify-content:center; gap:.4rem; margin-bottom:.25rem; }
+.hub-round-date { margin-top:.25rem; margin-bottom:.75rem; padding-bottom:.75rem; border-bottom:1px solid var(--border); }
+
+/* acc bar (accuracy) */
+.acc-bar-bg   { height:2px; background:var(--border); margin-top:3px; }
+.acc-bar-fill { height:100%; }

@@ -1,0 +1,47 @@
+/* ── STANDINGS ───────────────────────────────────────────── */
+.standings-header,
+.standings-main {
+    display:grid;
+    grid-template-columns:20px 1fr 40px 20px 60px;
+    align-items:center;
+    gap:.4rem;
+    padding:.65rem .65rem .65rem .4rem;
+}
+.standings-header  { border-bottom:1px solid var(--border); background:var(--bg-surface); padding:.55rem .65rem; }
+.standings-row     { border-bottom:1px solid var(--border); }
+.standings-row:last-child { border-bottom:none; }
+.standings-row.leader-row { border-left:2px solid var(--warn); }
+.standings-main    { cursor:pointer; }
+
+.s-rank        { font-size:.88rem; color:var(--text-muted); text-align:center; }
+.s-name        { display:flex; align-items:center; min-width:0; font-weight:700; font-size:1rem; }
+.s-name-inner  { min-width:0; flex:1; }
+.s-player-name {
+    font-size:.7rem; font-weight:400; color:var(--text-muted);
+    margin-top:1px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.s-pts           { font-weight:700; font-size:1rem; color:var(--text-main); text-align:right; }
+.s-pts.leader-pts { color:var(--warn); }
+.s-wins          { font-size:.85rem; color:var(--text-muted); text-align:right; }
+.s-gap           { font-size:.85rem; text-align:right; }
+.gap-leader      { font-size:.78rem; }
+.s-chevron       { font-size:.78rem; color:var(--text-muted); transition:transform .2s; display:inline-block; margin-left:6px; flex-shrink:0; vertical-align:middle; }
+.s-chevron.open  { transform:rotate(180deg); }
+
+/* accordion detail */
+.standings-detail      { display:none; padding:.85rem 1rem; border-top:1px solid var(--border); background:var(--bg-surface); }
+.standings-detail.open { display:block; }
+.detail-section-sep    { margin-top:.5rem; padding-top:.5rem; border-top:1px solid var(--border); }
+.price-curr-cell       { display:flex; align-items:center; justify-content:flex-end; gap:.35rem; }
+
+.detail-total {
+    display:grid; grid-template-columns:1fr 90px 110px;
+    gap:.5rem; border-top:1px solid var(--border);
+    padding-top:.85rem; margin-top:.1rem; align-items:baseline;
+}
+.detail-total-col              { text-align:right; }
+.detail-total-col:first-child  { text-align:left; }
+.detail-total-label            { font-size:.75rem; color:var(--text-muted); text-transform:uppercase; }
+.detail-total-val              { font-size:1.05rem; }
+.detail-total-diff             { font-size:.72rem; margin-top:1px; }
+.detail-total-curr             { display:flex; align-items:baseline; justify-content:flex-end; gap:.4rem; }

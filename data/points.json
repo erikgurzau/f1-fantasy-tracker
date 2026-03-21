@@ -1,6 +1,7 @@
 {
   "australia": {
     "updated_to": "race",
+    "status": "completed",
     "drivers": {
       "ALB":{"pts":8,  "exp":2  }, "ALO":{"pts":-14,"exp":-4.8}, "ANT":{"pts":32, "exp":22.5},
       "BEA":{"pts":20, "exp":6.2}, "BOR":{"pts":13, "exp":0.7 }, "BOT":{"pts":-16,"exp":3.3 },

@@ -1,3 +1,201 @@
+// ── BEST / WORST FANTASY TEAM FOR A ROUND ────────────────
+let insightsUseInitPrice = false;
+
+function buildTeamInsights(roundId, budget = 100, useInit = insightsUseInitPrice) {
+    const rd = RESULTS[roundId];
+    if (!rd) return '';
+    const BUDGET = budget;
+
+    const allDrivers = Object.entries(rd.drivers)
+        .map(([code, d]) => ({
+            code,
+            pts:   d.pts ?? 0,
+            price: useInit
+                ? (REG.drivers[code]?.init_price ?? 0)
+                : (latestPrice(code, 'drivers') ?? REG.drivers[code]?.init_price ?? 0),
+            con:   REG.drivers[code]?.constructor?.toLowerCase() ?? 'cad'
+        }));
+
+    const allCons = Object.entries(rd.constructors)
+        .map(([code, c]) => ({
+            code,
+            pts:   c.pts ?? 0,
+            price: useInit
+                ? (REG.constructors[code]?.init_price ?? 0)
+                : (latestPrice(code, 'constructors') ?? REG.constructors[code]?.init_price ?? 0)
+        }));
+
+    function pickTeam(drvPool, conPool, minimize = false) {
+        let bestScore = minimize ? Infinity : -Infinity;
+        let finalTeam = null;
+
+        // All constructor pairs
+        for (let i = 0; i < conPool.length; i++) {
+            for (let j = i + 1; j < conPool.length; j++) {
+                const c1 = conPool[i], c2 = conPool[j];
+                const conPrice = c1.price + c2.price;
+                const conPts   = c1.pts + c2.pts;
+                if (conPrice >= BUDGET) continue;
+
+                const drvBudget = BUDGET - conPrice;
+
+                findDrivers(drvPool, 0, 5, drvBudget, 0, 0, [], (drvSet, drvPts, drvSpent) => {
+                    const captain = drvSet.reduce((prev, curr) =>
+                        minimize ? (curr.pts < prev.pts ? curr : prev)
+                                 : (curr.pts > prev.pts ? curr : prev)
+                    );
+                    const totalScore = conPts + drvPts + captain.pts; // captain bonus
+                    if (minimize ? totalScore < bestScore : totalScore > bestScore) {
+                        bestScore = totalScore;
+                        finalTeam = {
+                            drv:      [...drvSet],
+                            cons:     [c1, c2],
+                            captain,
+                            totalPts: totalScore,
+                            spent:    conPrice + drvSpent,
+                        };
+                    }
+                });
+            }
+        }
+        return finalTeam;
+    }
+
+    function findDrivers(pool, startIdx, need, remBudget, currentPts, currentSpent, currentSet, onFound) {
+        if (need === 0) {
+            onFound(currentSet, currentPts, currentSpent);
+            return;
+        }
+        if (startIdx > pool.length - need) return;
+
+        for (let i = startIdx; i < pool.length; i++) {
+            const d = pool[i];
+            if (d.price <= remBudget) {
+                currentSet.push(d);
+                findDrivers(pool, i + 1, need - 1, remBudget - d.price,
+                            currentPts + d.pts, currentSpent + d.price, currentSet, onFound);
+                currentSet.pop();
+            }
+        }
+    }
+
+    const best  = pickTeam(
+        [...allDrivers].sort((a, b) => b.pts - a.pts),
+        [...allCons].sort((a, b) => b.pts - a.pts),
+        false
+    );
+    const worst = pickTeam(
+        [...allDrivers].sort((a, b) => a.pts - b.pts),
+        [...allCons].sort((a, b) => a.pts - b.pts),
+        true
+    );
+
+    function teamCard(title, icon, iconClass, team) {
+        const isWin = team.totalPts > 0;
+        const dRows = team.drv.map(d => {
+            const isCap = d === team.captain;
+            const pts   = isCap ? d.pts * 2 : d.pts;
+            const con   = REG.drivers[d.code]?.constructor?.toLowerCase() ?? 'cad';
+            return `
+                <div class="hub-row">
+                    <div class="driver-tag" style="border-color:var(--${con})">
+                        ${d.code}${isCap ? '<span class="x2">X2</span>' : ''}
+                    </div>
+                    <div class="${ptsClass(pts)}">${pts > 0 ? '+' : ''}${pts}</div>
+                    <div class="muted" style="font-size:.78rem">${d.price.toFixed(1)}M</div>
+                </div>`;
+        }).join('');
+
+        const cRows = team.cons.map(c => `
+            <div class="hub-row">
+                <div class="driver-tag" style="border-color:var(--${c.code.toLowerCase()})">${c.code}</div>
+                <div class="${ptsClass(c.pts)}">${c.pts > 0 ? '+' : ''}${c.pts}</div>
+                <div class="muted" style="font-size:.78rem">${c.price.toFixed(1)}M</div>
+            </div>`).join('');
+
+        const round = REG.rounds.find(r => r.id === roundId);
+        const cc    = round?.cc ?? 'un';
+        const roundTag = round
+            ? `<div class="s-player-name ps-4" style="margin-left:2px">R${pad(round.n)} <img src="https://flagcdn.com/w40/${cc}.png" width="16" height="11" class="flag-inline">${round.name.toUpperCase()}</div>`
+            : '';
+        return `
+            <div class="card-db">
+                <div class="card-header-row bb pb-2 mb-2">
+                    <div class="card-header-left">
+                        <div class="s-code"><i class="bi ${icon} ${iconClass} me-2"></i>${title}</div>
+                        ${roundTag}
+                    </div>
+                    <div class="card-header-right">
+                        <div class="card-pts ${isWin ? 'pos' : 'neg'}">${team.totalPts > 0 ? '+' : ''}${team.totalPts} PTS</div>
+                        <div class="card-gap muted">${team.spent.toFixed(1)}M / ${BUDGET}M</div>
+                    </div>
+                </div>
+                <div class="hub-row hub-row-hd"><div>DRIVER</div><div>PTS</div><div>PRICE</div></div>
+                ${dRows}
+                <div class="hub-row hub-row-hd hub-section-sep"><div>CONSTRUCTOR</div><div>PTS</div><div>PRICE</div></div>
+                ${cRows}
+            </div>`;
+    }
+
+    const minCost = [...allDrivers].sort((a, b) => a.price - b.price).slice(0, 5).reduce((s, d) => s + d.price, 0)
+                  + [...allCons].sort((a, b) => a.price - b.price).slice(0, 2).reduce((s, c) => s + c.price, 0);
+    const infeasible = minCost > BUDGET;
+
+    return `
+        <div class="label mb-2 mt-4"><i class="bi bi-stars me-2"></i>ROUND_INSIGHTS</div>
+        <div class="insights-config-panel">
+            <div class="insights-config-row">
+                <span class="label col text-right"><i class="bi bi-cash me-2"></i>BUDGET</span>
+                <div class="col text-right">
+                    <input type="number" min="10" max="200" step="0.5" value="${BUDGET}"
+                        class="budget-input"
+                        onchange="refreshTeamInsights('${roundId}', +this.value)">
+                    <span class="muted" style="font-size:.82rem">M</span>
+                </div>
+            </div>
+            <div class="insights-config-sep"></div>
+            <div class="insights-config-row">
+                <span class="label col text-right"><i class="bi bi-tag me-2"></i>PRICE_MODE</span>
+                <div class="col text-right">
+                    <label class="insights-toggle-wrap">
+                        <input type="checkbox" class="insights-toggle-cb" ${useInit ? 'checked' : ''}
+                            onchange="toggleInsightsPrice('${roundId}')">
+                        <span class="insights-toggle-track">
+                            <span class="insights-toggle-thumb"></span>
+                        </span>
+                        <span class="insights-toggle-label">${useInit ? 'INIT' : 'CURR'}</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+        ${infeasible
+            ? `<div class="card-db" style="border-color:var(--neg);color:var(--text-muted);font-size:.82rem">
+                <i class="bi bi-exclamation-triangle neg me-2"></i>BUDGET_TOO_LOW — min required: ${minCost.toFixed(1)}M for 5 drivers + 2 constructors
+               </div>`
+            : (best  ? teamCard('BEST_TEAM',  'bi-arrow-up-circle',   'pos', best)  : '')
+            + (worst ? teamCard('WORST_TEAM', 'bi-arrow-down-circle', 'neg', worst) : '')
+        }`;
+}
+
+function refreshTeamInsights(roundId, budget) {
+    const hub = document.getElementById('hub');
+    if (!hub) return;
+    const marker = hub.querySelector('[data-insights-id]');
+    if (!marker) return;
+    marker.outerHTML = `<div data-insights-id="${roundId}">${buildTeamInsights(roundId, budget)}</div>`;
+}
+
+function toggleInsightsPrice(roundId) {
+    insightsUseInitPrice = !insightsUseInitPrice;
+    const hub = document.getElementById('hub');
+    if (!hub) return;
+    const marker = hub.querySelector('[data-insights-id]');
+    if (!marker) return;
+    const budgetInput = marker.querySelector('.budget-input');
+    const budget = budgetInput ? +budgetInput.value : 100;
+    marker.outerHTML = `<div data-insights-id="${roundId}">${buildTeamInsights(roundId, budget)}</div>`;
+}
+
 // ── RACE HUB ──────────────────────────────────────────────
 // Depends on: common.js, data.js
 
@@ -23,7 +221,7 @@ function hubRoundHeader(round, status, hasSessions = true) {
     const flag    = `<img src="https://flagcdn.com/w40/${cc}.png" class="card-db-flag" alt="${round.name}">`;
     const spr     = sprintBadge(round.fmt, 'md');
     const label   = roundLabel(round, status);
-    const dateCls = hasSessions ? 'hub-round-date' : 'hub-round-date hub-round-date--no-sep';
+    const dateCls = hasSessions ? 'hub-round-date' : '';
     return `
         <div class="card-db text-center py-4">
             <div class="label mb-2">${label}${spr ? ' — ' + spr : ''}</div>
@@ -55,8 +253,8 @@ function renderHub() {
     }
 
     // ── UPCOMING ──
-    if (status === 'upcoming') {
-        hub.innerHTML = hubRoundHeader(round, 'upcoming') + `
+    if (status === 'upcoming' || status === 'next') {
+        hub.innerHTML = hubRoundHeader(round, status) + `
             ${allSessionsHtml(round)}
         </div>`;
         return;
@@ -82,7 +280,8 @@ function renderHub() {
 
     hub.innerHTML = roundHeader
         + `<div class="label mb-3"><i class="bi bi-flag me-2"></i>RACE_RESULTS</div>`
-        + playersWithData.map(({ p, rData }) => buildPlayerCard(p, rData, maxPts)).join('');
+        + playersWithData.map(({ p, rData }) => buildPlayerCard(p, rData, maxPts)).join('')
+        + `<div data-insights-id="${round.id}">${buildTeamInsights(round.id)}</div>`;
 }
 
 function buildPlayerCard(p, rData, maxPts) {

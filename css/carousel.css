@@ -1,0 +1,87 @@
+/* ── CAROUSEL ────────────────────────────────────────────── */
+.carousel-wrap { margin-bottom:.5rem; }
+.carousel {
+    display:flex; gap:.5rem;
+    overflow-x:auto; scroll-snap-type:x mandatory;
+    scrollbar-width:none; padding:2px 4px 6px;
+    -webkit-overflow-scrolling:touch;
+}
+.carousel::-webkit-scrollbar { display:none; }
+
+.race-card {
+    flex-shrink:0; scroll-snap-align:start;
+    width:120px; min-height:130px;
+    border:1px solid var(--border); background:var(--bg-surface);
+    padding:.65rem .7rem .55rem; cursor:pointer;
+    transition:border-color .15s, background .15s;
+    position:relative; display:flex; flex-direction:column; gap:.25rem;
+    overflow:hidden;
+}
+.race-card.is-done:hover  { background:var(--bg-hover); }
+.race-card.is-current     { border-color:var(--accent); }
+.race-card.is-cancelled   { opacity:.65; cursor:pointer; }
+.race-card:hover          { background:var(--bg-hover); }
+.race-card.active         { outline:2px solid var(--text-muted); outline-offset:-1px; }
+.race-card.is-done.active      { outline-color:var(--pos); }
+.race-card.is-current.active   { outline-color:var(--accent); }
+.race-card.is-cancelled.active { outline-color:var(--neg); }
+
+.rc-round      { font-size:.68rem; color:var(--text-muted); display:flex; align-items:center; justify-content:space-between; gap:.3rem; }
+.rc-round-left { display:flex; align-items:center; gap:.3rem; }
+.rc-spr-badge  { font-size:.52rem; color:var(--warn); font-weight:700; letter-spacing:.04em; flex-shrink:0; }
+.rc-flag       { margin:.2rem 0 .1rem; }
+.rc-flag img   { width:32px; height:20px; border:1px solid var(--border); display:block; }
+.rc-name       { font-size:.74rem; font-weight:700; line-height:1.25; }
+.rc-date       { font-size:.6rem; color:var(--text-muted); margin-top:1px; }
+.rc-status     { font-size:.64rem; text-transform:uppercase; letter-spacing:.04em; margin-top:auto; padding-top:.3rem; }
+.rc-status.completed { color:var(--pos); }
+.rc-status.current   { color:var(--accent); }
+.rc-status.upcoming  { color:var(--text-muted); }
+.rc-status.cancelled { color:var(--neg); font-weight:700; }
+
+.dot           { width:6px; height:6px; border-radius:50%!important; display:inline-block; flex-shrink:0; }
+.dot-completed { background:var(--pos); }
+.dot-current   { background:var(--accent); animation:blink 1s step-start infinite; }
+.dot-upcoming  { background:var(--border); }
+.dot-cancelled { background:var(--neg); }
+
+/* overlays */
+.rc-overlay-done {
+    position:absolute; inset:0; pointer-events:none;
+    background:rgba(96,182,142,.13);
+    display:flex; align-items:flex-end; justify-content:flex-end;
+    padding:.3rem .35rem;
+}
+.rc-overlay-done i { font-size:.9rem; color:var(--pos); opacity:.7; }
+.rc-overlay-cancelled {
+    position:absolute; inset:0; pointer-events:none;
+    background:rgba(255,110,100,.07);
+    display:flex; align-items:center; justify-content:center;
+}
+
+/* controls */
+.carousel-controls { display:flex; align-items:center; gap:.6rem; padding:.2rem 0; margin-bottom:.5rem; }
+.c-arrow {
+    background:var(--bg-surface); border:1px solid var(--border);
+    color:var(--text-main); width:36px; height:36px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; font-size:.85rem;
+    transition:background .15s, border-color .15s, color .15s;
+}
+.c-arrow:hover { background:var(--bg-hover); border-color:var(--accent); color:var(--accent); }
+
+.scrubber       { flex:1; height:36px; display:flex; align-items:center; cursor:pointer; position:relative; padding:0 4px; touch-action:none; }
+.scrubber-track { width:100%; height:4px; background:var(--border); position:relative; }
+.scrubber-fill  { position:absolute; left:0; top:0; bottom:0; background:var(--accent); }
+.scrubber-thumb { position:absolute; top:50%; transform:translate(-50%,-50%); width:12px; height:12px; background:var(--accent); border:2px solid var(--bg-base); }
+
+/* goto current button */
+.btn-goto-current {
+    font-size:.7rem; padding:.2rem .55rem;
+    background:var(--bg-surface); border:1px solid var(--accent);
+    color:var(--accent); cursor:pointer; font-family:inherit;
+    text-transform:uppercase; letter-spacing:.05em;
+    display:inline-flex; align-items:center; gap:.3rem;
+    transition:opacity .2s;
+}
+.btn-goto-current:hover { opacity:.75; }

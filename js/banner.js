@@ -45,7 +45,7 @@ function renderUpdatedStatus(now) {
     const statusClass = status === 'updated' ? 'pos' : status === 'provisional' ? 'warn' : 'muted';
     const statusText  = status ? status.toUpperCase() : '—';
     const suffix      = updatedTo
-        ? ` <span class="status-session">// ${updatedTo}</span>`
+        ? ` <span class="status-session">// ${updatedTo}_${checkRound.id}</span>`
         : '';
 
     el.innerHTML = `STATUS_POINTS: <span class="${statusClass} fw-bold">${statusText}</span>${suffix}`;
@@ -71,7 +71,9 @@ function renderBanner() {
         </div>`;
 
     let nextBlock = '';
-    if (next) {
+    // Check if all rounds are done — no next session to show
+    const allRoundsDone = REG.rounds.every(r => isRoundComplete(r) || r.status === 'cancelled');
+    if (next && !allRoundsDone) {
         const sess = nextSession(next);
         if (sess) {
             const cd    = formatCD(sess.ms);
