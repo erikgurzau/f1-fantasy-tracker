@@ -14,41 +14,77 @@ function startClock() {
     setInterval(tick, 1000);
 }
 
+// Sessions that trigger a switch to the current round's status.
+// Before these start we still show the previous round's status.
+const SCORING_SESSIONS = new Set(['sprint_qualy', 'qualy', 'sprint', 'race']);
+
 function renderUpdatedStatus(now) {
     const el = document.getElementById('updated-status');
     if (!el) return;
 
-    const checkRound = (() => {
-        if (!currentRound) return null;
-        const sess  = currentRound.sessions ?? {};
-        const order = sessionOrder(currentRound.fmt);
-        const anyStarted = order.some(k => sess[k] && new Date(sess[k]) < now);
-        if (anyStarted) return currentRound;
-        return lastCompletedRound() ?? currentRound;
-    })();
+    // First scoreable session key for a round (sprint_qualy or qualy)
+    function firstScoringSession(r) {
+        const order = sessionOrder(r.fmt);
+        return order.find(k => SCORING_SESSIONS.has(k)) ?? 'qualy';
+    }
 
-    if (!checkRound) {
-        el.innerHTML = `STATUS_POINTS: <span class="status-unknown fw-bold">—</span>`;
+    // Has the first scoring session of the current round already started?
+    function currentRoundScoringStarted(r) {
+        const key = firstScoringSession(r);
+        const iso = r.sessions?.[key];
+        return iso ? new Date(iso) <= now : false;
+    }
+
+    // Decide which round to display status for
+    let targetRound = null;
+    let notUpdated  = false;
+
+    if (!currentRound) {
+        // Season not started or all done — use last completed
+        targetRound = lastCompletedRound();
+    } else if (isRoundPartial(currentRound) || isRoundComplete(currentRound)) {
+        // Current round already has some results — always show it
+        targetRound = currentRound;
+    } else if (currentRoundScoringStarted(currentRound)) {
+        // Scoring has begun but no results logged yet -> NOT_UPDATED on current round
+        targetRound = currentRound;
+        notUpdated  = true;
+    } else {
+        // We're in FP / pre-weekend -> show previous completed round
+        targetRound = lastCompletedRound() ?? currentRound;
+    }
+
+    if (!targetRound) {
+        el.innerHTML =
+            `<span class="label">STATUS_POINTS</span>` +
+            `<span class="status-unknown fw-bold">—</span>`;
         return;
     }
 
-    const rd = RESULTS[checkRound.id];
-    if (!rd) {
-        el.innerHTML = `STATUS_POINTS: <span class="status-unknown fw-bold">—</span>`;
-        return;
+    const rd = RESULTS[targetRound.id];
+
+    let statusClass, statusText, sessionLabel;
+
+    if (notUpdated || !rd) {
+        // No data yet for this round — flag the first scoring session
+        const firstKey = firstScoringSession(targetRound);
+        statusClass  = 'neg';
+        statusText   = 'NOT_UPDATED';
+        sessionLabel = (SESSION_LABELS[firstKey] ?? firstKey.toUpperCase()) + '[' + targetRound.id + ']';
+    } else {
+        const status = rd.status?.toLowerCase() ?? null;
+        const upTo   = rd.updated_to?.toLowerCase() ?? null;
+        statusClass  = status === 'updated' ? 'pos' : status === 'provisional' ? 'warn' : 'muted';
+        statusText   = status ? status.toUpperCase() : '—';
+        sessionLabel = upTo
+            ? (SESSION_LABELS[upTo] ?? upTo.toUpperCase()) + ' [' + targetRound.id + ']'
+            : null;
     }
 
-    const status      = rd.status?.toLowerCase() ?? null;
-    const updatedTo   = rd.updated_to
-        ? (SESSION_LABELS[rd.updated_to.toLowerCase()] ?? rd.updated_to.toUpperCase())
-        : null;
-    const statusClass = status === 'updated' ? 'pos' : status === 'provisional' ? 'warn' : 'muted';
-    const statusText  = status ? status.toUpperCase() : '—';
-    const suffix      = updatedTo
-        ? ` <span class="status-session">// ${updatedTo}_${checkRound.id}</span>`
-        : '';
-
-    el.innerHTML = `STATUS_POINTS: <span class="${statusClass} fw-bold">${statusText}</span>${suffix}`;
+    el.innerHTML =
+        `<span class="label">STATUS_POINTS: </span>` +
+        `<span class="${statusClass} fw-bold">${statusText}</span>` +
+        (sessionLabel ? `<br><span class="label">SESSION: </span><span class="status-session">${sessionLabel}</span>` : '');
 }
 
 function renderBanner() {

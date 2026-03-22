@@ -3,6 +3,8 @@
 
 let h2hPlayerA = null;
 let h2hPlayerB = null;
+let h2hZoomCum = 'fit'; // 'fit' | '1x' | '2x' | 'max'
+let h2hZoomGap = 'fit';
 
 function renderH2H() {
     const wrap = document.getElementById('h2h-wrap');
@@ -24,7 +26,7 @@ function renderH2H() {
 
     wrap.innerHTML = `
         ${buildH2HSelector(players)}
-        ${pA && pB ? buildH2HContent(pA, pB, doneRounds) : ''}
+        ${pA && pB ? `<div class="h2h-content">${buildH2HContent(pA, pB, doneRounds)}</div>` : ''}
     `;
 }
 
@@ -92,6 +94,20 @@ function setH2HPlayer(slot, code) {
     renderH2H();
 }
 
+function setH2HZoom(chart, level) {
+    if (chart === 'cum') h2hZoomCum = level;
+    else                 h2hZoomGap = level;
+    // Re-render only the content section, not the whole selector
+    const pA = league().players.find(p => p.code === h2hPlayerA);
+    const pB = league().players.find(p => p.code === h2hPlayerB);
+    const doneRounds = REG.rounds.filter(r => isRoundComplete(r) || isRoundPartial(r));
+    const wrap = document.getElementById('h2h-wrap');
+    if (!wrap || !pA || !pB) return;
+    // Only replace the content div, keep selector intact
+    const content = wrap.querySelector('.h2h-content');
+    if (content) content.outerHTML = `<div class="h2h-content">${buildH2HContent(pA, pB, doneRounds)}</div>`;
+}
+
 function buildH2HContent(pA, pB, rounds) {
     if (!rounds.length) {
         return `<div class="stats-empty label">NO DATA YET</div>`;
@@ -148,8 +164,13 @@ function buildH2HScoreboard(pA, pB, winsA, winsB, draws, colA, colB) {
 
 // ── Cumulative chart ─────────────────────────────────────
 function buildH2HCumulativeChart(pA, pB, rounds, colA, colB) {
-    const MIN_STEP = 14; // px minimum between two data points
-    const W = Math.max(480, (rounds.length - 1) * MIN_STEP + 80), H = 240;
+    const n = rounds.length;
+    // px per step for each zoom level
+    const STEP = { 'fit': null, '1x': 20, '2x': 38, 'max': 60 };
+    const step = STEP[h2hZoomCum];
+    const W    = step ? Math.max(480, (n - 1) * step + 100) : 480;
+    const H    = 240;
+    const scrollable = step !== null;
 
     let cumA = 0, cumB = 0;
     const seriesA = rounds.map(r => { cumA += pA.rounds[r.id]?.pts ?? 0; return cumA; });
@@ -159,9 +180,7 @@ function buildH2HCumulativeChart(pA, pB, rounds, colA, colB) {
     const maxV = Math.max(...all, 1);
     const minV = Math.min(...all, 0);
     const rng  = maxV - minV || 1;
-    const n    = rounds.length;
 
-    // compute left padding from widest y-tick label (7px per char at font-size 13)
     const yTicks = 4;
     const tickVals = Array.from({length: yTicks+1}, (_, i) => Math.round(minV + (rng/yTicks)*i));
     const maxLabelLen = Math.max(...tickVals.map(v => String(v).length));
@@ -175,7 +194,6 @@ function buildH2HCumulativeChart(pA, pB, rounds, colA, colB) {
 
     const pathA = seriesA.map((v, i) => `${i===0?'M':'L'}${xS(i).toFixed(1)},${yS(v).toFixed(1)}`).join(' ');
     const pathB = seriesB.map((v, i) => `${i===0?'M':'L'}${xS(i).toFixed(1)},${yS(v).toFixed(1)}`).join(' ');
-
     const dotsA = seriesA.map((v, i) => `<circle cx="${xS(i).toFixed(1)}" cy="${yS(v).toFixed(1)}" r="3" fill="${colA}"/>`).join('');
     const dotsB = seriesB.map((v, i) => `<circle cx="${xS(i).toFixed(1)}" cy="${yS(v).toFixed(1)}" r="3" fill="${colB}"/>`).join('');
 
@@ -183,7 +201,7 @@ function buildH2HCumulativeChart(pA, pB, rounds, colA, colB) {
         const x = xS(i);
         const cc = r.cc ?? 'un';
         return `<image href="https://flagcdn.com/w40/${cc}.png" x="${(x - 10).toFixed(1)}" y="${H - PAD.b + 20}" width="13" height="9"/>
-                <text x="${x.toFixed(1) - 4}" y="${H - 10}" fill="var(--text-muted)" font-size="8" text-anchor="middle">R${pad(r.n)}</text>`;
+                <text x="${x.toFixed(1) - 4}" y="${H - 10}" fill="var(--text-main)" font-size="8" text-anchor="middle">R${pad(r.n)}</text>`;
     }).join('');
 
     const grid = tickVals.map(v => {
@@ -192,10 +210,17 @@ function buildH2HCumulativeChart(pA, pB, rounds, colA, colB) {
                  <text x="${PAD.l-6}" y="${(y+4).toFixed(1)}" fill="var(--text-muted)" font-size="9" text-anchor="end">${v}</text>`;
     }).join('');
 
+    const zoomBtns = ['fit','1x','2x','max'].map(z =>
+        `<button onclick="setH2HZoom('cum','${z}')" class="h2h-zoom-btn${h2hZoomCum===z?' h2h-zoom-btn--active':''}">${z.toUpperCase()}</button>`
+    ).join('');
+
     return `
-        <div class="label mb-2"><i class="bi bi-graph-up me-2"></i>CUMULATIVE_POINTS</div>
-        <div class="stats-card chart-scroll">
-            <svg viewBox="0 0 ${W} ${H}" class="stats-chart">
+        <div class="label mb-2 h2h-chart-header">
+            <span class="h2h-chart-title"><i class="bi bi-graph-up me-2"></i>CUMULATIVE_POINTS</span>
+            <div class="h2h-zoom-group">${zoomBtns}</div>
+        </div>
+        <div class="stats-card${scrollable ? ' chart-scroll' : ''}" style="${scrollable ? '' : 'padding:1rem 0;overflow:hidden'}">
+            <svg viewBox="0 0 ${W} ${H}" class="stats-chart" style="${scrollable ? '' : 'width:100%;height:auto;display:block'}">
                 ${grid}${xLabels}
                 <path d="${pathA}" fill="none" stroke="${colA}" stroke-width="2"/>${dotsA}
                 <path d="${pathB}" fill="none" stroke="${colB}" stroke-width="2"/>${dotsB}
@@ -205,20 +230,25 @@ function buildH2HCumulativeChart(pA, pB, rounds, colA, colB) {
 
 // ── Gap chart (A minus B per round) ─────────────────────
 function buildH2HGapChart(pA, pB, rounds, colA, colB) {
-    const MIN_STEP = 14; // px minimum per bar slot
-    const H_PAD = 20; // horizontal padding each side
-    const W = Math.max(480, rounds.length * MIN_STEP + H_PAD * 2), H = 200, PAD = { t: 20, r: H_PAD, b: 52, l: H_PAD };
+    const n     = rounds.length;
+    const H_PAD = 20;
+    const STEP  = { 'fit': null, '1x': 20, '2x': 38, 'max': 60 };
+    const step  = STEP[h2hZoomGap];
+    const W     = step ? Math.max(480, n * step + H_PAD * 2) : 480;
+    const H     = 200;
+    const scrollable = step !== null;
+    const PAD   = { t: 20, r: H_PAD, b: 52, l: H_PAD };
     const chartW = W - PAD.l - PAD.r;
     const chartH = H - PAD.t - PAD.b;
- 
+
     const gaps  = rounds.map(r => (pA.rounds[r.id]?.pts ?? 0) - (pB.rounds[r.id]?.pts ?? 0));
     const maxV  = Math.max(...gaps.map(Math.abs), 1);
-    const barW  = Math.min(chartW / rounds.length - 4, 40);
- 
-    const xS = i => PAD.l + (i + 0.5) * (chartW / rounds.length);
+    const barW  = Math.min(chartW / n - 4, 40);
+
+    const xS    = i => PAD.l + (i + 0.5) * (chartW / n);
     const yZero = PAD.t + chartH / 2;
-    const yS = v => yZero - (v / maxV) * (chartH / 2);
- 
+    const yS    = v => yZero - (v / maxV) * (chartH / 2);
+
     const bars = gaps.map((v, i) => {
         const x   = (xS(i) - barW/2).toFixed(1);
         const y   = Math.min(yS(v), yZero).toFixed(1);
@@ -226,20 +256,27 @@ function buildH2HGapChart(pA, pB, rounds, colA, colB) {
         const col = v > 0 ? colA : v < 0 ? colB : 'var(--border)';
         return `<rect x="${x}" y="${y}" width="${barW.toFixed(1)}" height="${Math.max(h,1).toFixed(1)}" fill="${col}" opacity="0.8"/>`;
     }).join('');
- 
+
     const zeroLine = `<line x1="${PAD.l}" y1="${yZero}" x2="${PAD.l+chartW}" y2="${yZero}" stroke="var(--border)" stroke-width="1" stroke-dasharray="4,3"/>`;
- 
+
     const xLabels = rounds.map((r, i) => {
         const x = xS(i);
         const cc = r.cc ?? 'un';
         return `<image href="https://flagcdn.com/w40/${cc}.png" x="${(x - 6).toFixed(1)}" y="${H - PAD.b + 20}" width="13" height="9"/>
-                <text x="${x.toFixed(1)}" y="${H - 10}" fill="var(--text-muted)" font-size="8" text-anchor="middle">R${pad(r.n)}</text>`;
+                <text x="${x.toFixed(1)}" y="${H - 10}" fill="var(--text-main)" font-size="8" text-anchor="middle">R${pad(r.n)}</text>`;
     }).join('');
- 
+
+    const zoomBtns = ['fit','1x','2x','max'].map(z =>
+        `<button onclick="setH2HZoom('gap','${z}')" class="h2h-zoom-btn${h2hZoomGap===z?' h2h-zoom-btn--active':''}">${z.toUpperCase()}</button>`
+    ).join('');
+
     return `
-        <div class="label mb-2"><i class="bi bi-arrows-collapse me-2"></i>POINTS_GAP_PER_ROUND <span class="muted" style="font-size:.72rem;margin-left:.4rem">(+ ${pA.code} / − ${pB.code})</span></div>
-        <div class="stats-card chart-scroll">
-            <svg viewBox="0 0 ${W} ${H}" class="stats-chart">
+        <div class="label mb-2 h2h-chart-header">
+            <span class="h2h-chart-title"><i class="bi bi-arrows-collapse me-2"></i>POINTS_GAP_PER_ROUND<br><span class="muted h2h-chart-sub ms-3">(+ ${pA.code} / − ${pB.code})</span></span>
+            <div class="h2h-zoom-group">${zoomBtns}</div>
+        </div>
+        <div class="stats-card${scrollable ? ' chart-scroll' : ''}" style="${scrollable ? '' : 'padding:1rem 0;overflow:hidden'}">
+            <svg viewBox="0 0 ${W} ${H}" class="stats-chart" style="${scrollable ? '' : 'width:100%;height:auto;display:block'}">
                 ${zeroLine}${bars}${xLabels}
             </svg>
         </div>`;

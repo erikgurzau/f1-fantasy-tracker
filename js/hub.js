@@ -101,7 +101,7 @@ function buildTeamInsights(roundId, budget = 100, useInit = insightsUseInitPrice
                     <div class="driver-tag" style="border-color:var(--${con})">
                         ${d.code}${isCap ? '<span class="x2">X2</span>' : ''}
                     </div>
-                    <div class="${ptsClass(pts)}">${pts > 0 ? '+' : ''}${pts}</div>
+                    <div class="${ptsClass(pts)}">${pts}</div>
                     <div class="muted" style="font-size:.78rem">${d.price.toFixed(1)}M</div>
                 </div>`;
         }).join('');
@@ -109,7 +109,7 @@ function buildTeamInsights(roundId, budget = 100, useInit = insightsUseInitPrice
         const cRows = team.cons.map(c => `
             <div class="hub-row">
                 <div class="driver-tag" style="border-color:var(--${c.code.toLowerCase()})">${c.code}</div>
-                <div class="${ptsClass(c.pts)}">${c.pts > 0 ? '+' : ''}${c.pts}</div>
+                <div class="${ptsClass(c.pts)}">${c.pts}</div>
                 <div class="muted" style="font-size:.78rem">${c.price.toFixed(1)}M</div>
             </div>`).join('');
 
@@ -126,7 +126,7 @@ function buildTeamInsights(roundId, budget = 100, useInit = insightsUseInitPrice
                         ${roundTag}
                     </div>
                     <div class="card-header-right">
-                        <div class="card-pts ${isWin ? 'pos' : 'neg'}">${team.totalPts > 0 ? '+' : ''}${team.totalPts} PTS</div>
+                        <div class="card-pts ${isWin ? 'pos' : 'neg'}">${team.totalPts} PTS</div>
                         <div class="card-gap muted">${team.spent.toFixed(1)}M / ${BUDGET}M</div>
                     </div>
                 </div>
@@ -199,13 +199,26 @@ function toggleInsightsPrice(roundId) {
 // ── RACE HUB ──────────────────────────────────────────────
 // Depends on: common.js, data.js
 
-function allSessionsHtml(round) {
+function allSessionsHtml(round, isCurrent = false) {
     const order = sessionOrder(round.fmt);
     const sess  = round.sessions ?? {};
     const now   = Date.now();
     return order.map(key => {
         const iso = sess[key]; if (!iso) return '';
-        const isPast     = new Date(iso).getTime() < now;
+        const isPast = new Date(iso).getTime() < now;
+        if (isCurrent) {
+            // current round: past sessions get line-through + muted icon
+            const lineThrough = isPast ? ' style="text-decoration:line-through"' : '';
+            const iconClass   = isPast ? 'muted' : '';
+            const labelColor  = isPast ? 'muted' : 'sess-future';
+            return `
+            <div class="banner-sess-label sess-row">
+                <i class="bi bi-clock me-1 align-middle ${iconClass}"></i>
+                <span${lineThrough} class="${labelColor}">${SESSION_LABELS[key] ?? key.toUpperCase()}</span>
+                <span${lineThrough} class="sess-label-date"> — ${sessionDateLabel(iso)}</span>
+            </div>`;
+        }
+        // upcoming/next: normal styling
         const labelColor = isPast ? 'sess-past' : 'sess-future';
         return `
             <div class="banner-sess-label sess-row">
@@ -221,12 +234,11 @@ function hubRoundHeader(round, status, hasSessions = true) {
     const flag    = `<img src="https://flagcdn.com/w40/${cc}.png" class="card-db-flag" alt="${round.name}">`;
     const spr     = sprintBadge(round.fmt, 'md');
     const label   = roundLabel(round, status);
-    const dateCls = hasSessions ? 'hub-round-date' : '';
     return `
         <div class="card-db text-center py-4">
             <div class="label mb-2">${label}${spr ? ' — ' + spr : ''}</div>
             <div class="hub-round-name">${flag}${round.name.toUpperCase()}</div>
-            <div class="label ${dateCls}">${round.date}</div>`;
+            <div class="label hub-round-date">${round.date}</div>`;
 }
 
 function renderHub() {
@@ -264,19 +276,26 @@ function renderHub() {
     const rd = RESULTS[round.id];
     if (!rd) {
         hub.innerHTML = hubRoundHeader(round, 'current') + `
-            ${allSessionsHtml(round)}
+            ${allSessionsHtml(round, true)}
         </div>`;
         return;
     }
 
     // ── COMPLETED / PARTIAL — show results ──
-    const roundHeader = hubRoundHeader(round, status, false) + `</div>`;
-
     const playersWithData = league().players
         .map(p => ({ p, rData: p.rounds[round.id] }))
         .sort((a, b) => (b.rData?.pts ?? -Infinity) - (a.rData?.pts ?? -Infinity));
 
-    const maxPts = playersWithData[0]?.rData?.pts ?? -Infinity;
+    const maxPts   = playersWithData[0]?.rData?.pts ?? -Infinity;
+    const totalPts = playersWithData.reduce((s, { rData }) => s + (rData?.pts ?? 0), 0);
+
+    // TOTAL_ROUND_PTS lives inside the header card, after the (empty) sessions area
+    const roundHeader = hubRoundHeader(round, status, false)
+        + `<div class="hub-total-pts label mt-2">
+               <span class="muted">TOTAL_ROUND_PTS</span>
+               <span class="fw-bold text-main">${totalPts}</span>
+           </div>
+        </div>`;
 
     hub.innerHTML = roundHeader
         + `<div class="label mb-3"><i class="bi bi-flag me-2"></i>RACE_RESULTS</div>`

@@ -1,12 +1,22 @@
 // ── BOOT SCREEN ───────────────────────────────────────────
 (function () {
+    // Delays are relative to the previous line (cumulative).
+    // Total budget across all LINES = ~820ms, well within the 1s cap.
+    // If data loads faster the sequence is cut short; if slower it waits.
     const LINES = [
-        { delay: 0,   html: `<span class="boot-prompt">$</span> <span class="boot-cmd">./f1_fantasy_tracker --init</span>` },
-        { delay: 200, html: `<span class="boot-dim">reading key parameter</span>` },
-        { delay: 100, html: `<span class="boot-dim">loading resources</span>` },
-        { delay: 400, html: `PROGRESS` },
-        { delay: 520, html: `<span class="boot-dim">precomputing standings...</span>` },
-        { delay: 640, html: `<span class="boot-dim">building player state....</span>` },
+        { delay:   0, html: `<span class="boot-prompt">$</span> <span class="boot-cmd">./f1_fantasy_tracker --init</span>` },
+        { delay:  60, html: `<span class="boot-dim">reading url params...</span>` },
+        { delay:  70, html: `<span class="boot-dim">resolving league key...</span>` },
+        { delay:  80, html: `<span class="boot-dim">fetching registry.json...</span>` },
+        { delay:  80, html: `<span class="boot-dim">fetching points.json...</span>` },
+        { delay: 100, html: `PROGRESS` },
+        { delay:  90, html: `<span class="boot-dim">parsing round data...</span>` },
+        { delay:  80, html: `<span class="boot-dim">deriving current round...</span>` },
+        { delay:  80, html: `<span class="boot-dim">precomputing standings...</span>` },
+        { delay:  80, html: `<span class="boot-dim">building player state...</span>` },
+        { delay:  80, html: `<span class="boot-dim">computing budget values...</span>` },
+        { delay:  80, html: `<span class="boot-dim">scoring round wins...</span>` },
+        { delay:  80, html: `<span class="boot-dim">preparing session data...</span>` },
     ];
 
     const DONE_LINE  = `<span class="boot-ok">✓ ready</span>`;
@@ -19,6 +29,9 @@
             <div class="boot-version">F1_FANTASY_TRACKER // ${new Date().getFullYear()}</div>
             <div class="boot-body" id="boot-body"></div>`;
         document.body.prepend(screen);
+        // real screen is now covering everything — drop the static cover
+        const cover = document.getElementById('boot-cover');
+        if (cover) cover.remove();
     }
 
     function addLine(html) {
@@ -74,35 +87,40 @@
     window.bootRun = async function (dataPromise) {
         inject();
 
-        const START = performance.now();
-        const MIN_MS = 900;
+        const START   = performance.now();
+        const MAX_MS  = 1000; // cap the animation at 1 second
 
         let progressTick = null;
+        let cumDelay = 0;
 
+        // Schedule all lines within the 1s budget
         LINES.forEach(({ delay, html }) => {
+            cumDelay += delay;
+            const d = Math.min(cumDelay, MAX_MS - 100); // clamp so last line fires before cap
             setTimeout(() => {
                 if (html === 'PROGRESS') {
                     addProgressBar();
-                    progressTick = animateProgress(400);
+                    progressTick = animateProgress(300);
                 } else {
                     addLine(html);
                 }
-            }, delay);
+            }, d);
         });
 
-        await dataPromise;
-
-        const elapsed = performance.now() - START;
-        if (elapsed < MIN_MS) await new Promise(r => setTimeout(r, MIN_MS - elapsed));
+        // Wait for data OR the 1s cap — whichever is longer
+        await Promise.all([
+            dataPromise,
+            new Promise(r => setTimeout(r, MAX_MS)),
+        ]);
 
         finishProgress(progressTick);
-        await new Promise(r => setTimeout(r, 120));
+        await new Promise(r => setTimeout(r, 80));
 
         addLine(DONE_LINE);
         const key = new URLSearchParams(window.location.search).get('key');
         addLine(READY_LINE.replace('{key}', key || '???'));
 
-        await new Promise(r => setTimeout(r, 280));
+        await new Promise(r => setTimeout(r, 220));
 
         const screen = document.getElementById('boot-screen');
         if (screen) {

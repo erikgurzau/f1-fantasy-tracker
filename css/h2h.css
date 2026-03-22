@@ -39,8 +39,6 @@
 .h2h-score-draws  { font-size:.72rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:.5rem; }
 .h2h-score-bar    { display:flex; height:4px; background:var(--border); overflow:hidden; gap:1px; }
 .h2h-bar-a, .h2h-bar-b { height:100%; transition:width .3s; }
-.h2h-score-side          { }
-.h2h-score-side--right   { }
 
 /* round table */
 .h2h-round-row {
@@ -60,3 +58,17 @@
 .h2h-row-win-a  { background:rgba(88,166,255,.06); }
 .h2h-row-win-b  { background:rgba(227,179,65,.06); }
 .h2h-row-draw   { background:rgba(255,255,255,.03); }
+
+/* ── ZOOM CONTROLS ──────────────────────────────────────── */
+.h2h-chart-header  { display:flex; justify-content:space-between; align-items:flex-start; gap:.5rem; }
+.h2h-chart-title   { flex:1; min-width:0; line-height:1.5; }
+.h2h-chart-sub     { font-size:.72rem; display:inline-block; margin-top:1px; }
+.h2h-zoom-group    { display:flex; gap:2px; flex-shrink:0; margin-top:1px; }
+.h2h-zoom-btn {
+    background:var(--bg-surface); border:1px solid var(--border);
+    color:var(--text-muted); font-family:inherit; font-size:.65rem;
+    padding:.15rem .4rem; cursor:pointer; text-transform:uppercase;
+    letter-spacing:.05em; transition:color .15s, border-color .15s;
+}
+.h2h-zoom-btn:hover            { border-color:var(--accent); color:var(--accent); }
+.h2h-zoom-btn--active          { border-color:var(--accent); color:var(--accent); background:rgba(88,166,255,.1); }

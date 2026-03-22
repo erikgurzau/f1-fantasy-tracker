@@ -10,7 +10,7 @@ function renderCarousel() {
         cancelled: 'dot-cancelled',
     };
     const stLabel = {
-        completed: 'DONE',
+        completed: 'COMPLETED',
         current:   'CURRENT',
         upcoming:  'UPCOMING',
         cancelled: 'CANCELLED',

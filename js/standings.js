@@ -48,11 +48,11 @@ function renderStandings() {
                             <div class="s-code">${p.code}</div>
                             <div class="s-player-name">${p.name}</div>
                         </div>
-                        <i class="bi bi-chevron-down s-chevron"></i>
                     </div>
                     <div class="s-pts${isLeader ? ' leader-pts' : ''}">${p.totalPts}</div>
                     <div class="s-wins">${p.wins}</div>
                     <div class="s-gap">${gapHtml}</div>
+                    <i class="bi bi-chevron-down s-chevron ms-2"></i>
                 </div>
                 <div class="standings-detail" id="sd-${p.code}">
                     <div class="hub-row price-row hub-row-hd">

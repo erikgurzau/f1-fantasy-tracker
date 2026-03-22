@@ -337,14 +337,14 @@ function buildStatCardRow(rank, tagColor, code, name, totalPts, avgPts, ptsPerM,
             </div>
             <div class="stat-secondary">
                 <div class="stat-sec-row">
-                    ${sc('AVG/RND', avgPts.toFixed(1), avgPts > 0 ? 'pos' : avgPts < 0 ? 'neg' : '')}
-                    ${sc('PTS/M',   ptsPerM.toFixed(1), ptsPerM > 0 ? 'pos' : ptsPerM < 0 ? 'neg' : '')}
-                    ${sc('ACC',     acc.toFixed(0)+'%', accClass(acc))}
+                    ${sc('AVG_PTS/RND', avgPts.toFixed(1), avgPts < 0 ? 'neg' : '')}
+                    ${sc('PTS/M',   ptsPerM.toFixed(1), ptsPerM < 0 ? 'neg' : '')}
+                    ${sc('ACCURACY',     acc.toFixed(0)+'%', accClass(acc))}
                 </div>
                 <div class="stat-sec-row">
                     ${sc('SELECTED', selCount !== null ? (totalPlayers !== null ? selCount + '/' + totalPlayers : selCount) : '—', !selCount || selCount == 0 ? 'muted' : '')}
-                    ${sc('BEST', bestP, bestP < 0 ? 'neg' : '')}
-                    ${sc('WORST', worstP, worstP < 0 ? 'neg' : '')}
+                    ${sc('HIGHEST_PTS', bestP, bestP < 0 ? 'neg' : '')}
+                    ${sc('LOWEST_PTS', worstP, worstP < 0 ? 'neg' : '')}
                 </div>
                 <div class="stat-sec-row">
                     ${sc('INIT_PRICE', initP.toFixed(1)+'M')}

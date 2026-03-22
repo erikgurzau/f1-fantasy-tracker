@@ -43,7 +43,7 @@
 /* stat card rows */
 .stat-table          { border:1px solid var(--border); }
 .stat-card-row       { background:var(--bg-surface); border-bottom:1px solid var(--border); }
-.stat-card-row--winner { border:2px solid var(--warn); }
+.stat-card-row--winner { border:1px solid var(--warn); }
 .stat-card-row:last-child { border-bottom:none; }
 
 .stat-top     { display:flex; align-items:center; justify-content:space-between; gap:.5rem; padding:.55rem; }
@@ -72,7 +72,7 @@
     border-bottom:1px solid var(--border);
 }
 .rec-cell:nth-child(2n) { border-right:none; }
-.rec-cell-top   { display:grid; align-items:center; gap:.35rem; margin-bottom:.3rem; }
+.rec-cell-top   { display:flex; align-items:center; gap:.35rem; margin-bottom:.3rem; }
 .rec-icon       { font-size:.85rem; flex-shrink:0; }
 .rec-label      { font-size:.72rem; letter-spacing:.04em; line-height:1.2; }
 .rec-val        { font-size:1.15rem; font-weight:700; line-height:1.1; color:var(--text-main); padding:.5rem 0; }

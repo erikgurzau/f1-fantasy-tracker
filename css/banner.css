@@ -14,8 +14,6 @@
 }
 .banner-completed-tag { font-size:.78rem; color:var(--pos); margin-top:.5rem; }
 
-.banner-last { }
-
 .banner-left {
     position:relative;
     padding-left:1.1rem;
@@ -23,7 +21,7 @@
 .banner-left::before {
     content:'';
     position:absolute; left:0;
-    width:2px; background:var(--accent);
+    width:1px; background:var(--accent);
     animation:borderTicker 2s ease-in-out infinite;
 }
 @keyframes borderTicker {
@@ -34,7 +32,7 @@
     100% { top:0;    height:8px; }
 }
 
-.banner-next-label  { font-size:.82rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); margin-bottom:.35rem; }
+.banner-next-label  { font-size:.82rem; text-transform:uppercase; color:var(--text-muted); margin-bottom:.35rem; }
 .banner-sess-label  { font-size:.8rem; color:var(--text-muted); }
 .sess-row           { margin-bottom:.25rem; text-align:center; }
 .sess-label-name    { color:var(--text-main); }
@@ -58,7 +56,7 @@
 .live-badge {
     display:inline-flex; align-items:center; gap:.4rem;
     font-size:.82rem; font-weight:700; color:var(--neg);
-    letter-spacing:.08em; text-transform:uppercase;
+    text-transform:uppercase;
     animation:livepulse 1.4s ease-in-out infinite;
 }
 .live-dot {

@@ -149,8 +149,8 @@ function sprintBadge(fmt, size = '') {
 
 function roundLabel(round, statusOverride) {
     const status = statusOverride ?? getRoundStatus(round);
-    const colorClass = status === 'completed' ? 'pos' : status === 'current' ? 'accent' : status === 'cancelled' ? 'neg' : '';
-    const labelMap   = { completed: 'DONE', current: 'CURRENT', cancelled: 'CANCELLED', upcoming: 'UPCOMING' };
+    const colorClass = status === 'completed' ? 'pos' : status === 'current' ? 'accent' : status === 'cancelled' ? 'neg' : status === 'next' ? 'text-main' : '';
+    const labelMap   = { completed: 'COMPLETED', current: 'CURRENT', cancelled: 'CANCELLED', upcoming: 'UPCOMING', next: 'NEXT' };
     const text       = labelMap[status] ?? status.toUpperCase();
     return `R${pad(round.n)} — <span class="${colorClass}">${text}</span>`;
 }

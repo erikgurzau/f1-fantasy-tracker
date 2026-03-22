@@ -2,7 +2,7 @@
 .standings-header,
 .standings-main {
     display:grid;
-    grid-template-columns:20px 1fr 40px 20px 60px;
+    grid-template-columns:20px 1fr 50px 20px 60px 16px;
     align-items:center;
     gap:.4rem;
     padding:.65rem .65rem .65rem .4rem;
@@ -10,23 +10,20 @@
 .standings-header  { border-bottom:1px solid var(--border); background:var(--bg-surface); padding:.55rem .65rem; }
 .standings-row     { border-bottom:1px solid var(--border); }
 .standings-row:last-child { border-bottom:none; }
-.standings-row.leader-row { border-left:2px solid var(--warn); }
+.standings-row.leader-row { border-left:1px solid var(--warn); }
 .standings-main    { cursor:pointer; }
 
 .s-rank        { font-size:.88rem; color:var(--text-muted); text-align:center; }
-.s-name        { display:flex; align-items:center; min-width:0; font-weight:700; font-size:1rem; }
-.s-name-inner  { min-width:0; flex:1; }
-.s-player-name {
-    font-size:.7rem; font-weight:400; color:var(--text-muted);
-    margin-top:1px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-}
+.s-name        { display:flex; align-items:baseline; gap:.35rem; min-width:0; font-weight:700; font-size:1rem; overflow:hidden; }
+.s-name-inner  { display:flex; align-items:baseline; gap:.35rem; min-width:0; flex:1; overflow:hidden; }
+.s-player-name { font-size:.7rem; font-weight:400; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
 .s-pts           { font-weight:700; font-size:1rem; color:var(--text-main); text-align:right; }
 .s-pts.leader-pts { color:var(--warn); }
 .s-wins          { font-size:.85rem; color:var(--text-muted); text-align:right; }
 .s-gap           { font-size:.85rem; text-align:right; }
 .gap-leader      { font-size:.78rem; }
-.s-chevron       { font-size:.78rem; color:var(--text-muted); transition:transform .2s; display:inline-block; margin-left:6px; flex-shrink:0; vertical-align:middle; }
-.s-chevron.open  { transform:rotate(180deg); }
+.s-chevron       { font-size:.78rem; color:var(--text-muted); transition:transform .2s; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.s-chevron.open  { transform:rotate(180deg)}
 
 /* accordion detail */
 .standings-detail      { display:none; padding:.85rem 1rem; border-top:1px solid var(--border); background:var(--bg-surface); }

@@ -1,3 +1,14 @@
+/* ── BOOT COVER (static, no-JS, instant) ─────────────────
+   Painted by the browser as soon as the HTML is parsed.
+   Removed by boot.js the moment the real boot screen is injected. */
+#boot-cover {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;          /* just below #boot-screen (9999) */
+    background: var(--bg-base);
+    pointer-events: none;
+}
+
 /* ── BOOT SCREEN ─────────────────────────────────────────── */
 #boot-screen {
     position: fixed;
@@ -5,10 +16,10 @@
     z-index: 9999;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
     background: var(--bg-base);
     font-family: 'JetBrains Mono', monospace;
-    padding: 1rem 2rem;
+    padding: 1.5rem 1rem;
     transition: opacity .3s ease, visibility .3s ease;
 }
 
@@ -23,6 +34,7 @@
     flex-direction: column;
     gap: 0;
     max-width: 700px;
+    margin-top: 2.2rem; /* clears the version tag so body starts just below it */
 }
 
 .boot-line {
@@ -52,7 +64,7 @@
 }
 @keyframes bootblink { 50% { opacity: 0; } }
 
-/* progress bar — full width, flush to bottom */
+/* progress bar */
 .boot-progress-wrap {
     display: flex;
     align-items: center;
@@ -82,7 +94,7 @@
     text-align: right;
 }
 
-/* version tag — mirrors .subtitle */
+/* version tag — top-left anchor; body's margin-top aligns flush below it */
 .boot-version {
     position: absolute;
     top: 1.5rem;

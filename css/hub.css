@@ -18,3 +18,4 @@
 /* acc bar (accuracy) */
 .acc-bar-bg   { height:2px; background:var(--border); margin-top:3px; }
 .acc-bar-fill { height:100%; }
+.hub-total-pts { display:flex; justify-content:center; align-items:baseline; gap: .5rem }
