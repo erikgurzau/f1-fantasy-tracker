@@ -5,16 +5,13 @@ let activeTab = 'overview';
 const tabRendered = { overview: false, stats: false, h2h: false };
 
 function switchTab(name) {
-    // Update buttons
     document.querySelectorAll('.nav-tab').forEach(btn => {
         btn.classList.toggle('active', btn.getAttribute('onclick').includes(`'${name}'`));
     });
-    // Update panes
     document.querySelectorAll('.nav-pane').forEach(pane => {
         pane.classList.toggle('active', pane.id === `pane-${name}`);
     });
     activeTab = name;
-    // Lazy render on first visit
     if (!tabRendered[name]) {
         tabRendered[name] = true;
         if (name === 'stats') renderStats();
@@ -22,10 +19,83 @@ function switchTab(name) {
     }
 }
 
+// ── ADMIN PICKER ──────────────────────────────────────────
+function showAdminPicker(championships) {
+    // Remove boot cover — admin screen replaces it
+    const cover = document.getElementById('boot-cover');
+    if (cover) cover.remove();
+
+    let selected = championships[0]?.key ?? null;
+
+    const wrap = document.createElement('div');
+    wrap.id = 'admin-picker';
+    wrap.className = 'admin-picker-wrap';
+    wrap.innerHTML = `
+        <div class="admin-picker-box">
+            <div class="admin-picker-logo">
+                <img src="./assets/f1ft-no-bg-logo.png" alt="F1FT" height="20">
+            </div>
+            <div class="label mb-1 mt-3 accent"><i class="bi bi-shield-lock me-2"></i>ADMIN_ACCESS</div>
+            <div class="admin-picker-title">SELECT_CHAMPIONSHIP</div>
+            <div class="admin-picker-list" id="admin-champ-list">
+                ${championships.map(c => `
+                    <div class="admin-champ-opt${c.key === selected ? ' active' : ''}"
+                         data-key="${c.key}"
+                         onclick="adminPickerSelect('${c.key}')">
+                        <span class="admin-champ-key">${c.key}</span>
+                        <span class="admin-champ-name">${c.name}</span>
+                    </div>`).join('')}
+            </div>
+            <button class="admin-picker-btn" onclick="adminPickerConfirm()">
+                <i class="bi bi-arrow-right-circle me-2"></i>OPEN_CHAMPIONSHIP
+            </button>
+            <div class="admin-picker-footer">
+                F1_FANTASY_TRACKER // ADMIN
+            </div>
+        </div>`;
+
+    document.body.prepend(wrap);
+
+    // Store selected key on the element for confirm handler
+    wrap._selected = selected;
+}
+
+function adminPickerSelect(key) {
+    const wrap = document.getElementById('admin-picker');
+    if (!wrap) return;
+    wrap._selected = key;
+    document.querySelectorAll('.admin-champ-opt').forEach(el => {
+        el.classList.toggle('active', el.dataset.key === key);
+    });
+    // Enable button
+    document.querySelector('.admin-picker-btn').removeAttribute('disabled');
+}
+
+function adminPickerConfirm() {
+    const wrap = document.getElementById('admin-picker');
+    if (!wrap || !wrap._selected) return;
+    // Redirect to same origin without role=admin, with key= chosen
+    const url = new URL(window.location.href);
+    url.searchParams.delete('role');
+    url.searchParams.set('key', wrap._selected);
+    window.location.href = url.toString();
+}
+
+// ── BOOT ──────────────────────────────────────────────────
 window.onload = async () => {
+    const params = new URLSearchParams(window.location.search);
+    const isAdmin = params.get('role') === 'admin';
+
+    if (isAdmin) {
+        // Load data silently, then show picker (no boot screen)
+        await loadData();
+        showAdminPicker(REG.championships ?? []);
+        return;
+    }
+
     await bootRun(loadData());
 
-    const key = new URLSearchParams(window.location.search).get('key');
+    const key = params.get('key');
     const lg  = key ? REG.championships.find(c => c.key === key) : null;
 
     if (!lg) {
@@ -51,7 +121,7 @@ window.onload = async () => {
 
     activeKey    = key;
     currentRound = deriveCurrentRound();
-    nextRound = deriveNextRound();
+    nextRound    = deriveNextRound();
     precompute();
 
     document.getElementById('app-subtitle').textContent = `F1_FANTASY_TRACKER // ${REG.season}`;

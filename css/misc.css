@@ -90,3 +90,54 @@
 .price-toggle:hover          { border-color:var(--accent); color:var(--accent); }
 .price-toggle--active        { border-color:var(--warn); color:var(--warn); }
 .price-toggle--active:hover  { border-color:var(--warn); color:var(--warn); }
+
+/* ── ADMIN PICKER ────────────────────────────────────────── */
+.admin-picker-wrap {
+    position:fixed; inset:0; z-index:9999;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--bg-base);
+    font-family:'JetBrains Mono',monospace;
+    padding:2rem;
+}
+.admin-picker-box {
+    border:1px solid var(--border); border-left:3px solid var(--accent);
+    padding:2rem; width:100%; max-width:420px;
+    display:flex; flex-direction:column; gap:.25rem;
+}
+.admin-picker-logo {
+    display:flex; align-items:center; gap:.6rem;
+    margin-bottom:.25rem;
+}
+.admin-picker-title {
+    font-size:1.1rem; font-weight:700;
+    color:var(--text-main); margin-bottom:.75rem; margin-top:.1rem;
+}
+.admin-picker-list {
+    display:flex; flex-direction:column; gap:2px;
+    margin-bottom:1.25rem;
+}
+.admin-champ-opt {
+    display:flex; align-items:baseline; gap:.6rem;
+    padding:.5rem .7rem; cursor:pointer;
+    border:1px solid var(--border);
+    background:var(--bg-surface);
+    transition:border-color .15s, background .15s;
+}
+.admin-champ-opt:hover   { background:var(--bg-hover); border-color:var(--accent); }
+.admin-champ-opt.active  { border-color:var(--accent); background:rgba(88,166,255,.08); }
+.admin-champ-key  { font-size:.82rem; font-weight:700; color:var(--accent); flex-shrink:0; }
+.admin-champ-name { font-size:.75rem; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.admin-picker-btn {
+    width:100%; padding:.6rem; cursor:pointer;
+    background:var(--accent); border:none; color:#000;
+    font-family:inherit; font-size:.82rem; font-weight:700;
+    text-transform:uppercase; letter-spacing:.07em;
+    transition:opacity .15s;
+}
+.admin-picker-btn:hover    { opacity:.85; }
+.admin-picker-btn:disabled { opacity:.4; cursor:not-allowed; }
+.admin-picker-footer {
+    font-size:.72rem; color:var(--text-muted);
+    text-align:center; margin-top:.75rem;
+    border-top:1px solid var(--border); padding-top:.75rem;
+}
