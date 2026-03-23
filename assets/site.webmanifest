@@ -1,6 +1,9 @@
 {
   "name": "F1_FANTASY_TRACKER",
   "short_name": "F1FT",
+  "display": "standalone",
+  "background_color": "#111314",
+  "theme_color": "#111314",
   "icons": [
     {
       "src": "/assets/web-app-manifest-192x192.png",
@@ -14,8 +17,5 @@
       "type": "image/png",
       "purpose": "maskable"
     }
-  ],
-  "theme_color": "#58a6ff",
-  "background_color": "#111314",
-  "display": "standalone"
+  ]
 }
