@@ -84,7 +84,7 @@ function renderUpdatedStatus(now) {
     el.innerHTML =
         `<span class="label">STATUS_POINTS: </span>` +
         `<span class="${statusClass} fw-bold">${statusText}</span>` +
-        (sessionLabel ? `<br><span class="label">SESSION: </span><span class="status-session">${sessionLabel}</span>` : '');
+        (sessionLabel ? `<br><span class="label"><i class="bi bi-arrow-return-right" style="margin-left: 2px;"></i> </span><span class="status-session">${sessionLabel}</span>` : '');
 }
 
 function renderBanner() {

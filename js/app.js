@@ -56,7 +56,7 @@ window.onload = async () => {
 
     document.getElementById('app-subtitle').textContent = `F1_FANTASY_TRACKER // ${REG.season}`;
     document.getElementById('league-name').textContent  = lg.name;
-    document.title = `${lg.name} // F1_FANTASY_TRACKER ${REG.season}`;
+    document.title = `${lg.name} // F1FT ${REG.season}`;
 
     selectedRound = currentRound?.id ?? REG.rounds[0].id;
     tabRendered.overview = true;
