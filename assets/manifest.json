@@ -1,0 +1,29 @@
+{
+    "name": "F1 Fantasy Tracker",
+    "short_name": "F1FT",
+    "description": "Track your F1 Fantasy league standings, race results, head-to-head stats and season progress",
+    "display": "standalone",
+    "background_color": "#111314",
+    "theme_color": "#111314",
+    "orientation": "any",
+    "scope": "/",
+    "icons": [
+        {
+            "src": "/assets/web-app-manifest-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/assets/web-app-manifest-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "categories": [
+        "sports",
+        "utilities"
+    ],
+    "screenshots": []
+}
