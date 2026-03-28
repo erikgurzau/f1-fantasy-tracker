@@ -27,7 +27,7 @@
 @keyframes borderTicker {
     0%   { top:0;    height:8px; }
     25%  { height:50px; }
-    50%  { top:96%;  height:8px; }
+    50%  { top:92%;  height:8px; }
     75%  { height:50px; }
     100% { top:0;    height:8px; }
 }
@@ -44,6 +44,9 @@
 /* status label */
 .status-unknown { color:var(--text-muted); }
 .status-session { color:var(--text-muted); }
+.sess-past-done { text-decoration:line-through; }
+.updated-status-row { display:flex; flex-wrap:wrap; align-items:baseline; gap:0 .35rem; }
+.updated-sep        { color:var(--text-muted); }
 
 /* countdown */
 .cd-wrap   { display:flex; align-items:flex-start; gap:.3rem; transform:translateX(-0.4rem); }
@@ -55,8 +58,9 @@
 @keyframes livepulse { 0%,100%{opacity:1} 50%{opacity:.4} }
 .live-badge {
     display:inline-flex; align-items:center; gap:.4rem;
-    font-size:.82rem; font-weight:700; color:var(--neg);
+    font-size:1rem; font-weight:700; color:var(--neg);
     text-transform:uppercase;
+    padding:.5rem .5rem 0 .5rem;
     animation:livepulse 1.4s ease-in-out infinite;
 }
 .live-dot {

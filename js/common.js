@@ -12,20 +12,20 @@ function league() { return STATE[activeKey]; }
 
 // ── SESSION CONSTANTS ─────────────────────────────────────
 const SESSION_DURATION = {
-    fp1:          60 * 60 * 1000,
-    fp2:          60 * 60 * 1000,
-    fp3:          60 * 60 * 1000,
-    sprint_qualy: 45 * 60 * 1000,
-    sprint:       75 * 60 * 1000,
-    qualy:        60 * 60 * 1000,
-    race:        120 * 60 * 1000,
+    fp1:  60 * 60 * 1000,
+    fp2:  60 * 60 * 1000,
+    fp3:  60 * 60 * 1000,
+    sq:   45 * 60 * 1000,
+    sr:   75 * 60 * 1000,
+    q:    60 * 60 * 1000,
+    r:   120 * 60 * 1000,
 };
-const SESSION_ORDER_STD = ['fp1', 'fp2', 'fp3', 'qualy', 'race'];
-const SESSION_ORDER_SPR = ['fp1', 'sprint_qualy', 'sprint', 'qualy', 'race'];
+const SESSION_ORDER_STD = ['fp1', 'fp2', 'fp3', 'q', 'r'];
+const SESSION_ORDER_SPR = ['fp1', 'sq', 'sr', 'q', 'r'];
 const SESSION_LABELS = {
     fp1: 'FP1', fp2: 'FP2', fp3: 'FP3',
-    sprint_qualy: 'SPRINT_Q', sprint: 'SPRINT',
-    qualy: 'QUALIFYING', race: 'RACE',
+    sq: 'SPRINT_QUALIFYING', sr: 'SPRINT_RACE',
+    q: 'QUALIFYING', r: 'RACE',
 };
 
 function sessionOrder(fmt) {
@@ -35,12 +35,12 @@ function sessionOrder(fmt) {
 // ── ROUND STATUS ──────────────────────────────────────────
 function isRoundComplete(r) {
     const rd = RESULTS[r.id];
-    return rd && rd.updated_to === 'race';
+    return rd && rd.updated_to === 'r';
 }
 
 function isRoundPartial(r) {
     const rd = RESULTS[r.id];
-    return rd && rd.updated_to && rd.updated_to !== 'race';
+    return rd && rd.updated_to && rd.updated_to !== 'r';
 }
 
 function getRoundStatus(r) {

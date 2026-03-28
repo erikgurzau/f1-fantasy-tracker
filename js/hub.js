@@ -208,23 +208,23 @@ function allSessionsHtml(round, isCurrent = false) {
         const isPast = new Date(iso).getTime() < now;
         if (isCurrent) {
             // current round: past sessions get line-through + muted icon
-            const lineThrough = isPast ? ' style="text-decoration:line-through"' : '';
-            const iconClass   = isPast ? 'muted' : '';
-            const labelColor  = isPast ? 'muted' : 'sess-future';
+            const doneClass  = isPast ? ' sess-past-done' : '';
+            const iconClass  = isPast ? 'muted' : '';
+            const labelColor = isPast ? 'muted' : 'sess-future';
             return `
             <div class="banner-sess-label sess-row">
-                <i class="bi bi-clock me-1 align-middle ${iconClass}"></i>
-                <span${lineThrough} class="${labelColor}">${SESSION_LABELS[key] ?? key.toUpperCase()}</span>
-                <span${lineThrough} class="sess-label-date"> — ${sessionDateLabel(iso)}</span>
+                <i class="bi bi-clock align-middle ${iconClass}"></i>
+                <span class="${labelColor}${doneClass}">${SESSION_LABELS[key] ?? key.toUpperCase()} 
+                <span class="muted">//</span> ${sessionDateLabel(iso)}</span>
             </div>`;
         }
         // upcoming/next: normal styling
         const labelColor = isPast ? 'sess-past' : 'sess-future';
         return `
             <div class="banner-sess-label sess-row">
-                <i class="bi bi-clock me-1 align-middle"></i>
+                <i class="bi bi-clock align-middle"></i>
                 <span class="${labelColor}">${SESSION_LABELS[key] ?? key.toUpperCase()}</span>
-                <span class="sess-label-date"> — ${sessionDateLabel(iso)}</span>
+                <span class="muted">//</span> ${sessionDateLabel(iso)}</span>
             </div>`;
     }).join('');
 }
@@ -289,13 +289,16 @@ function renderHub() {
     const maxPts   = playersWithData[0]?.rData?.pts ?? -Infinity;
     const totalPts = playersWithData.reduce((s, { rData }) => s + (rData?.pts ?? 0), 0);
 
-    // TOTAL_ROUND_PTS lives inside the header card, after the (empty) sessions area
+    // Completed: show TOTAL_ROUND_PTS. Partial: show session schedule instead.
+    const isCompleted = isRoundComplete(round);
     const roundHeader = hubRoundHeader(round, status, false)
-        + `<div class="hub-total-pts label mt-2">
-               <span class="muted">TOTAL_ROUND_PTS</span>
-               <span class="fw-bold text-main">${totalPts}</span>
-           </div>
-        </div>`;
+        + (isCompleted
+            ? `<div class="hub-total-pts label mt-2">
+                   <span class="muted">TOTAL_ROUND_PTS</span>
+                   <span class="fw-bold text-main">${totalPts}</span>
+               </div>`
+            : allSessionsHtml(round, true))
+        + `</div>`;
 
     hub.innerHTML = roundHeader
         + `<div class="label mb-3"><i class="bi bi-flag me-2"></i>RACE_RESULTS</div>`
@@ -332,7 +335,7 @@ function buildPlayerCard(p, rData, maxPts) {
             </div>
             ${dRows}${cRows}
             <div class="hub-row hub-row-hd bt mt-2 pt-2">
-                <span class="muted">ACCURACY</span>
+                <span class="muted">ACCURACY_XPT</span>
                 <span class="muted text-right">PTS</span>
                 <span class="muted text-right">XPT</span>
             </div>

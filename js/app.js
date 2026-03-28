@@ -99,7 +99,7 @@ window.onload = async () => {
     const lg  = key ? REG.championships.find(c => c.key === key) : null;
 
     if (!lg) {
-        document.title = 'F1 FANTASY — NOT FOUND';
+        document.title = 'F1FT // CHAMP_NOT_FOUND';
         document.body.innerHTML = `
             <div class="access-denied-wrap">
                 <div class="access-denied-box">

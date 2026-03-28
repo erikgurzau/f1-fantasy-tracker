@@ -339,7 +339,7 @@ function buildStatCardRow(rank, tagColor, code, name, totalPts, avgPts, ptsPerM,
                 <div class="stat-sec-row">
                     ${sc('AVG_PTS/RND', avgPts.toFixed(1), avgPts < 0 ? 'neg' : '')}
                     ${sc('PTS/M',   ptsPerM.toFixed(1), ptsPerM < 0 ? 'neg' : '')}
-                    ${sc('ACCURACY',     acc.toFixed(0)+'%', accClass(acc))}
+                    ${sc('ACCURACY_XPT',     acc.toFixed(0)+'%', accClass(acc))}
                 </div>
                 <div class="stat-sec-row">
                     ${sc('SELECTED', selCount !== null ? (totalPlayers !== null ? selCount + '/' + totalPlayers : selCount) : '—', !selCount || selCount == 0 ? 'muted' : '')}

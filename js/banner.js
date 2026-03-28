@@ -8,15 +8,15 @@ function startClock() {
         const t   = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         const el  = document.getElementById('live-clock');
         if (el) el.textContent = d.toUpperCase() + ' ' + t;
-        renderUpdatedStatus(now);
     }
     tick();
     setInterval(tick, 1000);
+    renderUpdatedStatus(new Date()); // ← called once on load
 }
 
 // Sessions that trigger a switch to the current round's status.
 // Before these start we still show the previous round's status.
-const SCORING_SESSIONS = new Set(['sprint_qualy', 'qualy', 'sprint', 'race']);
+const SCORING_SESSIONS = new Set(['sq', 'q', 'sr', 'r']);
 
 function renderUpdatedStatus(now) {
     const el = document.getElementById('updated-status');
@@ -82,9 +82,11 @@ function renderUpdatedStatus(now) {
     }
 
     el.innerHTML =
+        `<span class="updated-status-row">` +
+        (sessionLabel ? `<span class="status-session">${sessionLabel}</span><span class="updated-sep"> // </span>` : '') +
         `<span class="label">STATUS_POINTS: </span>` +
         `<span class="${statusClass} fw-bold">${statusText}</span>` +
-        (sessionLabel ? `<br><span class="label"><i class="bi bi-arrow-return-right" style="margin-left: 2px;"></i> </span><span class="status-session">${sessionLabel}</span>` : '');
+        `</span>`;
 }
 
 function renderBanner() {
@@ -130,16 +132,15 @@ function renderBanner() {
 
             nextBlock = `
             <div class="banner-sep"></div>
-            <div class="banner-left p-3">
+            <div class="p-3 ${isLiveNow ? 'live-banner-left' : 'banner-left'}">
                 <div class="banner-next-label">CURRENT_ROUND</div>
                 <div class="banner-round-flag mb-2">
                     ${flagImg(next.cc, next.name)}
                     <span class="fw-bold">${next.name.toUpperCase()}</span>
                 </div>
                 <div class="banner-sess-label">
-                    <i class="bi bi-clock me-1 align-middle"></i>
-                    <span class="sess-label-name">${sess.label}</span>
-                    <span class="sess-label-date">— ${sessionDateLabel(sess.iso)}</span>
+                    <i class="bi bi-clock"></i>
+                    <span class="sess-label-name">${sess.label} <span class="muted">//</span> ${sessionDateLabel(sess.iso)}</span>
                 </div>
                 <div class="cd-wrap" id="cd-wrap-live">${cdContent}</div>
             </div>`;
