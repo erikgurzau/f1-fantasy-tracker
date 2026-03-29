@@ -54,19 +54,13 @@ function renderUpdatedStatus(now) {
     let notUpdated  = false;
 
     if (!currentRound) {
-        // Season over or not started — show last completed
         targetRound = lastCompletedRound();
     } else if (isRoundPartial(currentRound) || isRoundComplete(currentRound)) {
-        // Current round has at least some data in JSON — always show it
         targetRound = currentRound;
     } else if (currentRoundScoringStarted(currentRound)) {
-        // First scoring session has begun but no JSON data yet — NOT_UPDATED
         targetRound = currentRound;
         notUpdated  = true;
     } else {
-        // We are in FP / pre-weekend — no scoring session started yet.
-        // Show the previous round's status (almost always RACE UPDATED).
-        // Use last round with ANY data, not just fully completed ones.
         const prevWithData = (() => {
             let r = null;
             for (const round of REG.rounds) {
@@ -79,57 +73,73 @@ function renderUpdatedStatus(now) {
     }
 
     if (!targetRound) {
-        el.innerHTML =
-            `<span class="label">STATUS_POINTS</span>` +
-            `<span class="status-unknown fw-bold">—</span>`;
+        el.innerHTML = `
+            <div class="term-block">
+                <div class="term-line text-lowercase">
+                    <span class="term-prompt">$</span>
+                    ./f1ft --status_points
+                    <span class="term-muted">—</span>
+                </div>
+            </div>`;
         return;
     }
 
     const rd = RESULTS[targetRound.id];
 
-    // The session the calendar says we should already have data for.
-    // = last scoring session that has already started on the clock.
-    // Falls back to first scoring session if weekend hasn't begun yet.
     const calSession = lastStartedScoringSession(targetRound) ?? { key: firstScoringSession(targetRound) };
-    const calKey     = calSession.key;                       // e.g. "r"
-    const updatedKey = rd?.updated_to?.toLowerCase() ?? null; // e.g. "q"
+    const calKey     = calSession.key;
+    const updatedKey = rd?.updated_to?.toLowerCase() ?? null;
 
-    // Is the JSON already up to date with the calendar session?
-    // We compare positions in the session order array.
     const order      = sessionOrder(targetRound.fmt);
     const calIdx     = order.indexOf(calKey);
     const updatedIdx = updatedKey ? order.indexOf(updatedKey) : -1;
     const isUpToDate = updatedIdx >= calIdx;
 
-    let statusClass, statusText, sessionLabel;
+    let statusClass, statusText, sessionLabel, updatedToLabel;
 
     if (!rd || notUpdated || !isUpToDate) {
-        // Points lag behind the calendar — show which session is missing
-        statusClass  = 'neg';
-        statusText   = 'NOT_UPDATED';
-        sessionLabel = (SESSION_LABELS[calKey] ?? calKey.toUpperCase()) + ' [' + targetRound.id + ']';
+        statusClass    = 'term-neg';
+        statusText     = 'NOT_UPDATED';
+        sessionLabel   = (SESSION_LABELS[calKey] ?? calKey.toUpperCase()) + ' [' + targetRound.id.toUpperCase() + ']';
+        updatedToLabel = null;
     } else {
         const status = rd.status?.toLowerCase() ?? null;
-        statusClass  = status === 'updated' ? 'pos' : status === 'provisional' ? 'warn' : 'muted';
-        statusText   = status ? status.toUpperCase() : '—';
-        sessionLabel = updatedKey
-            ? (SESSION_LABELS[updatedKey] ?? updatedKey.toUpperCase()) + ' [' + targetRound.id + ']'
+        statusClass    = status === 'updated' ? 'term-pos' : status === 'provisional' ? 'term-warn' : 'term-muted';
+        statusText     = status ? status.toUpperCase() : '—';
+        sessionLabel   = null;
+        updatedToLabel = updatedKey
+            ? (SESSION_LABELS[updatedKey] ?? updatedKey.toUpperCase()) + ' [' + targetRound.id.toUpperCase() + ']'
             : null;
     }
 
-    el.innerHTML =
-        `<span class="updated-status-row">` +
-        (sessionLabel ? `<span class="status-session">${sessionLabel}</span><span class="updated-sep opacity-50"> // </span>` : '') +
-        `<span class="label">STATUS_POINTS: </span>` +
-        `<span class="${statusClass} fw-bold">${statusText}</span>` +
-        `</span>`;
+    // Build terminal lines — output inline with command, all wrapped in a bg box
+    const sessionTarget = updatedToLabel ?? sessionLabel;
+    const cmdLabel2     = updatedToLabel ? './f1ft --updated_to' : './f1ft --pending_session';
+
+    let html = `<div class="term-block">`;
+
+    html += `
+        <div class="term-line">
+            <span class="term-cmd text-lowercase"><span class="term-prompt">$ </span>./f1ft --status_points</span>
+            <span class="${statusClass} term-val">${statusText}</span>
+        </div>`;
+
+    if (sessionTarget) {
+        html += `
+        <div class="term-line">
+            <span class="term-cmd text-lowercase"><span class="term-prompt">$ </span>${cmdLabel2}</span>
+            <span class="term-val">${sessionTarget}</span>
+        </div>`;
+    }
+
+    html += `</div>`;
+    el.innerHTML = html;
 }
 
 function renderBanner() {
     const total   = REG.rounds.length;
     const current = currentRound ? currentRound.n : REG.rounds.filter(r => isRoundComplete(r) || isRoundPartial(r)).length;
     const pct     = Math.round(current / total * 100);
-    // Last round = last with ANY data (partial or complete), not just fully scored
     const lastWithData = (() => {
         let r = null;
         for (const round of REG.rounds) {
@@ -144,15 +154,13 @@ function renderBanner() {
 
     const lastBlock = `
         <div class="banner-last px-3 pb-3">
-            <div class="label banner-section-label">LAST ROUND</div>
+            <div class="label banner-section-label">LAST_ROUND</div>
             <div class="banner-round-flag">
                 ${last ? flagImg(last.cc, last.name) : ''}
                 <span class="fw-bold">${last ? last.name.toUpperCase() : 'N/A'}</span>
             </div>
             ${last ? (() => {
                 const isComplete = isRoundComplete(last);
-                const rd = RESULTS[last.id];
-                const upTo = rd?.updated_to?.toUpperCase() ?? '?';
                 const icon = isComplete ? 'bi-check-circle' : 'bi-hourglass-split';
                 const label = isComplete
                     ? `ROUND_${pad(last.n)}_COMPLETED`
@@ -163,11 +171,8 @@ function renderBanner() {
         </div>`;
 
     let nextBlock = '';
-    // Check if all rounds are done — no next session to show
     const allRoundsDone = REG.rounds.every(r => isRoundComplete(r) || r.status === 'cancelled');
     if (next && !allRoundsDone) {
-        // If the current round has no remaining/live sessions (e.g. race finished but
-        // points not yet updated to "r"), fall through to the next upcoming round.
         let displayRound = next;
         let sess = nextSession(displayRound);
         if (!sess) {

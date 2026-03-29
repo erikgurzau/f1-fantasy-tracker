@@ -33,6 +33,7 @@ body { background:var(--bg-base); color:var(--text-main); padding-bottom:0; font
 .text-center { text-align:center; }
 .diff-small { font-size:.68rem; }
 .opacitiy-50 { opacity:.5; }
+.rotate-y-180 { transform: rotateY(180deg); }
 
 .b  { border:1px solid var(--border); }
 .bb { border-bottom:1px solid var(--border); }

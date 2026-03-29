@@ -34,16 +34,21 @@ function buildSeasonRecords(players, rounds) {
     const bestRounds  = allRounds.filter(x => x.pts === bestPts);
     const worstRounds = allRounds.filter(x => x.pts === worstPts);
 
-    // win streaks
+    // win streaks — track start/end round of the best streak
     const streaksSorted = players.map(p => {
-        let max = 0, cur = 0;
+        let max = 0, cur = 0, curStart = null, bestStart = null, bestEnd = null;
         rounds.forEach(r => {
             const roundPts = players.map(pp => pp.rounds[r.id]?.pts ?? -Infinity);
             const myPts    = p.rounds[r.id]?.pts ?? -Infinity;
-            cur = myPts === Math.max(...roundPts) && myPts > -Infinity ? cur + 1 : 0;
-            max = Math.max(max, cur);
+            if (myPts === Math.max(...roundPts) && myPts > -Infinity) {
+                if (cur === 0) curStart = r;
+                cur++;
+                if (cur > max) { max = cur; bestStart = curStart; bestEnd = r; }
+            } else {
+                cur = 0; curStart = null;
+            }
         });
-        return { p, streak: max };
+        return { p, streak: max, bestStart, bestEnd };
     }).sort((a, b) => b.streak - a.streak);
     const bestStreakVal = streaksSorted[0].streak;
     const bestStreakers = streaksSorted.filter(x => x.streak === bestStreakVal);
@@ -95,7 +100,7 @@ function buildSeasonRecords(players, rounds) {
     const topBudgets   = budgetSorted.filter(x => x.gain === topBudgetVal);
     const botBudgets   = budgetSorted.filter(x => x.gain === botBudgetVal);
 
-    // items: subs = array of { code, extra } — supports multiple tied players
+    // items: subs = array of { code, extra, streakInfo } — supports multiple tied players
     const items = [
         { icon:'bi-trophy warn',           label:'MOST_WINS',
           val:`${mostWinsVal}`,             unit: mostWinsVal !== 1 ? 'WINS' : 'WIN',
@@ -103,7 +108,11 @@ function buildSeasonRecords(players, rounds) {
 
         { icon:'bi-fire warn',             label:'BEST_WIN_STREAK',
           val:`${bestStreakVal}`,            unit: bestStreakVal !== 1 ? 'ROUNDS' : 'ROUND',
-          subs: bestStreakers.map(x => ({ code: x.p.code, extra: null })) },
+          subs: bestStreakers.map((x, i) => ({
+              code: x.p.code,
+              extra: null,
+              streakInfo: (x.bestStart && x.bestEnd) ? { start: x.bestStart, end: x.bestEnd, ttId: `streak-tt-${i}` } : null
+          })) },
 
         { icon:'bi-arrow-up-circle pos',   label:'BEST_ROUND',
           val:`${bestPts}`,                 unit:'PTS',
@@ -131,11 +140,35 @@ function buildSeasonRecords(players, rounds) {
     ];
 
     const cells = items.map(({ icon, label, val, unit, subs }) => {
-        const subTags = subs.map(({ code, extra }) =>
-            `<span class="rec-sub-row">
-                <span class="rec-sub"><span class="fw-bold">${code}</span></span>${extra ? `<span class="rec-sub-extra muted">${extra}</span>` : ''}
-            </span>`
-        ).join('');
+        const subTags = subs.map(({ code, extra, streakInfo }) => {
+            let infoIcon = '';
+            if (streakInfo) {
+                const { start, end, ttId } = streakInfo;
+                const sameRound = start.id === end.id;
+                const tooltipContent = sameRound
+                    ? `<span class="xpt-tooltip-label">ROUND_${pad(start.n)}</span>
+                       <span style="display:flex;align-items:center;gap:.35rem;margin-top:3px">
+                           <img src="https://flagcdn.com/w40/${start.cc ?? 'un'}.png" width="20" height="13" style="border:1px solid var(--border)">
+                           <span style="font-size:.78rem;color:var(--text-main)">${start.name.toUpperCase()}</span>
+                       </span>`
+                    : `<span class="xpt-tooltip-label">R${pad(start.n)} → R${pad(end.n)}</span>
+                       <span style="display:flex;align-items:center;gap:.35rem;margin-top:3px">
+                           <img src="https://flagcdn.com/w40/${start.cc ?? 'un'}.png" width="20" height="13" style="border:1px solid var(--border)">
+                           <span style="font-size:.78rem;color:var(--text-main)">${start.name.toUpperCase()}</span>
+                       </span>
+                       <span style="display:flex;align-items:center;gap:.35rem;margin-top:3px">
+                           <img src="https://flagcdn.com/w40/${end.cc ?? 'un'}.png" width="20" height="13" style="border:1px solid var(--border)">
+                           <span style="font-size:.78rem;color:var(--text-main)">${end.name.toUpperCase()}</span>
+                       </span>`;
+                infoIcon = `<span class="xpt-tooltip-wrap" onclick="toggleXptTooltip('${ttId}')">
+                    <i class="bi bi-info-circle xpt-info-icon"></i>
+                    <span class="xpt-tooltip" id="${ttId}">${tooltipContent}</span>
+                </span>`;
+            }
+            return `<span class="rec-sub-row">
+                <span class="rec-sub"><span class="fw-bold">${code}</span></span>${extra ? `<span class="rec-sub-extra muted">${extra}</span>` : ''}${infoIcon}
+            </span>`;
+        }).join('');
         return `
         <div class="rec-cell">
             <div class="rec-cell-top">

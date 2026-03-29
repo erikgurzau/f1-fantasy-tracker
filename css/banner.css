@@ -42,12 +42,30 @@
 .sess-future        { color:var(--text-main); margin-left:.2rem; }
 .sess-cancelled-msg { color:var(--text-muted); font-size:.8rem; }
 
-/* status label */
-.status-unknown { color:var(--text-muted); }
-.status-session { color:var(--text-muted); }
-.sess-past-done { text-decoration:line-through; }
-.updated-status-row { display:flex; flex-wrap:wrap; align-items:baseline; gap:0 .35rem; }
-.updated-sep        { color:var(--text-muted); }
+/* ── TERMINAL STATUS BLOCK ───────────────────────────────── */
+.term-block {
+    width: 100%;
+    display:inline-flex;
+    flex-direction:column;
+    gap:.15rem;
+    font-family:'JetBrains Mono', monospace;
+    font-size:.78rem;
+    line-height:1.7;
+    background:var(--bg-base);
+    border:1px solid var(--border);
+    padding:.45rem .75rem;
+}
+
+.term-line { display:flex; align-items:baseline; gap:.45rem; white-space:nowrap; }
+.term-prompt { color:var(--pos); flex-shrink:0; font-weight:700; }
+.term-cmd    { color:var(--text-muted); flex-shrink:0; }
+.term-arrow  { color:var(--text-muted); flex-shrink:0; }
+.term-val    { font-weight:700; letter-spacing:.04em; color:var(--text-main); }
+
+/* output colors — mirror boot.js semantics */
+.term-pos   { color:var(--pos)  !important; }
+.term-neg   { color:var(--neg)  !important; }
+.term-warn  { color:var(--warn) !important; }
 
 /* countdown */
 .cd-wrap   { display:flex; align-items:flex-start; gap:.3rem; transform:translateX(-0.4rem); }

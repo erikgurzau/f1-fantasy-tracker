@@ -2,10 +2,18 @@
 .standings-header,
 .standings-main {
     display:grid;
-    grid-template-columns:20px 1fr 50px 20px 60px 16px;
+    grid-template-columns:20px 1fr 50px 20px 50px 16px;
     align-items:center;
-    gap:.4rem;
+    gap:.4rem .7rem;
     padding:.65rem .65rem .65rem .4rem;
+}
+
+.s-rank-wrap {
+    display:flex; align-items:center; justify-content:flex-end;
+    gap:2px;
+}
+.s-trend {
+    font-size:.55rem; flex-shrink:0; line-height:1;
 }
 .standings-header  { border-bottom:1px solid var(--border); background:var(--bg-surface); padding:.55rem .65rem; }
 .standings-row     { border-bottom:1px solid var(--border); }

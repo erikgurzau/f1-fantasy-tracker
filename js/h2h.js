@@ -314,8 +314,8 @@ function buildH2HRoundTable(pA, pB, rounds, colA, colB) {
             : `<span class="muted">—</span>`;
         return `<div class="h2h-round-row ${bgClass}">
             <div class="h2h-rr-round">
-                <img src="https://flagcdn.com/w40/${cc}.png" width="16" height="11" style="border:1px solid var(--border)">
                 <span>R${pad(r.n)}</span>
+                <img src="https://flagcdn.com/w40/${cc}.png" width="16" height="11" style="border:1px solid var(--border)">
             </div>
             <div class="h2h-rr-pts">${ptAHtml}</div>
             <div class="h2h-rr-pts">${ptBHtml}</div>
@@ -335,7 +335,7 @@ function buildH2HRoundTable(pA, pB, rounds, colA, colB) {
                 <div class="h2h-rr-round">ROUND</div>
                 <div class="h2h-rr-pts" style="color:${colA}">${pA.code}</div>
                 <div class="h2h-rr-pts" style="color:${colB}">${pB.code}</div>
-                <div class="h2h-rr-cum">TOT</div>
+                <div class="h2h-rr-cum">TOTAL</div>
                 <div class="h2h-rr-cum-gap"></div>
             </div>
             ${rows}

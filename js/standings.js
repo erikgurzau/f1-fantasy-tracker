@@ -5,6 +5,21 @@ function renderStandings() {
     const players = league().players;
     const wrap    = document.getElementById('standings-wrap');
 
+    // ── Compute previous-round rank ───────────────────────
+    const doneRounds = REG.rounds.filter(r => RESULTS[r.id]);
+    const prevRound  = doneRounds.length >= 2 ? doneRounds[doneRounds.length - 2] : null;
+    const prevRankMap = {};
+    if (prevRound) {
+        const prevIdx = REG.rounds.indexOf(prevRound);
+        const prevPts = players.map(p => ({
+            code: p.code,
+            pts: REG.rounds
+                .filter((r, ri) => ri <= prevIdx && RESULTS[r.id])
+                .reduce((s, r) => s + (p.rounds[r.id]?.pts ?? 0), 0)
+        })).sort((a, b) => b.pts - a.pts);
+        prevPts.forEach((x, i) => { prevRankMap[x.code] = i + 1; });
+    }
+
     let html = `
         <div class="standings-header">
             <div class="label text-center">#</div>
@@ -19,6 +34,17 @@ function renderStandings() {
         const gapHtml  = isLeader
             ? `<span class="pos gap-leader">LEADER</span>`
             : `<span class="neg">${p.gap}</span>`;
+
+        // Trend icon vs previous round ranking
+        const prevRank = prevRankMap[p.code];
+        let trendHtml = '';
+        if (prevRank != null) {
+            const delta = prevRank - p.rank; // positive = moved up
+            if (delta > 0)      trendHtml = `<i class="bi bi-caret-up-fill s-trend pos"></i>`;
+            else if (delta < 0) trendHtml = `<i class="bi bi-caret-down-fill s-trend neg"></i>`;
+            else                trendHtml = '';
+        }
+        const rankClass = prevRankMap[p.code] == null ? '' : (prevRankMap[p.code] - p.rank > 0 ? ' pos' : prevRankMap[p.code] - p.rank < 0 ? ' neg' : '');
 
         const allDrivers = [p.team.captain, ...p.team.drivers];
         const dRows      = allDrivers.map(d => buildPriceRow(d, 'drivers', d === p.team.captain)).join('');
@@ -42,7 +68,7 @@ function renderStandings() {
         html += `
             <div class="standings-row${isLeader ? ' leader-row' : ''}">
                 <div class="standings-main" onclick="toggleDetail('sd-${p.code}',this)">
-                    <div class="s-rank">${p.rank}</div>
+                    <div class="s-rank-wrap">${trendHtml}<div class="s-rank${rankClass}">${p.rank}</div></div>
                     <div class="s-name">
                         <div class="s-name-inner">
                             <div class="s-code">${p.code}</div>

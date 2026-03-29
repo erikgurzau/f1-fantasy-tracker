@@ -49,7 +49,7 @@
 <div id="boot-cover"></div>
 <div class="wrap p-3">
 
-    <header class="bb pb-3 mb-4 mt-2">
+    <header class="mb-3 mt-2">
         <div class="subtitle" id="app-subtitle">F1FT</div>
         <h1 id="league-name" class="m-0 fw-bold text-uppercase" style="font-size:2.3rem">—</h1>
         <div id="live-clock" class="label mt-1">—</div>
@@ -121,23 +121,29 @@
 
 <footer class="footer-db">
     <div class="wrap px-3">
-        <div class="footer-inner">
-            <div class="d-flex align-items-center">
-                <img src="./assets/f1ft-no-bg-logo.png" alt="F1_FANTASY_TRACKER" width="70px" height="15px" class="footer-title pe-3">
-                <span class="footer-title">F1_FANTASY_TRACKER</span>
-                <span class="footer-sep">//</span>
-                <span class="footer-author">built by
-                    <a href="https://github.com/erikgurzau" target="_blank" rel="noopener" class="footer-link">
-                        <i class="bi bi-box-arrow-up-right me-1"></i>ERIK
-                    </a>
+
+        <div class="footer-logo-row d-flex align-items-center justify-content-between">
+            <img src="./assets/f1ft-no-bg-logo.png" alt="F1_FANTASY_TRACKER" height="15px">
+            <div class="term-line diff-small gap-3">
+                <span class="term-cmd"><span class="term-prompt">$</span> ./f1ft --v <span class="term-val">2.2.1</span></span>
+                <span class="muted">
+                    <i class="bi bi-c-circle"></i>
+                    <script>document.write(new Date().getFullYear())</script> Erik Gurzau
                 </span>
             </div>
-            <div class="footer-links">
-                <a href="https://fantasy.formula1.com/it/" target="_blank" rel="noopener" class="footer-link">
-                    <i class="bi bi-box-arrow-up-right me-1"></i>F1 FANTASY OFFICIAL
-                </a>
-            </div>
         </div>
+
+        <div class="footer-inner">
+            <a href="https://github.com/erikgurzau" target="_blank" rel="noopener" class="footer-link">
+                <i class="bi bi-github" style="font-size:.82rem"></i>
+                GITHUB
+            </a>
+            <a href="https://fantasy.formula1.com/it/" target="_blank" rel="noopener" class="footer-link">
+                <img src="./assets/f1-logo.png" alt="F1" style="height:.40rem">
+                F1_FANTASY_OFFICIAL
+            </a>
+        </div>
+
     </div>
 </footer>
 </body>
