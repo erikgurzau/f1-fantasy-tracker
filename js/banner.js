@@ -25,7 +25,21 @@ function renderUpdatedStatus(now) {
     // First scoreable session key for a round (sprint_qualy or qualy)
     function firstScoringSession(r) {
         const order = sessionOrder(r.fmt);
-        return order.find(k => SCORING_SESSIONS.has(k)) ?? 'qualy';
+        return order.find(k => SCORING_SESSIONS.has(k)) ?? 'q';
+    }
+
+    // Last scoring session that has already started (wall-clock), in calendar order.
+    // Returns { key, iso } or null if none has started yet.
+    function lastStartedScoringSession(r) {
+        const order = sessionOrder(r.fmt);
+        let last = null;
+        for (const key of order) {
+            if (!SCORING_SESSIONS.has(key)) continue;
+            const iso = r.sessions?.[key];
+            if (!iso) continue;
+            if (new Date(iso) <= now) last = { key, iso };
+        }
+        return last;
     }
 
     // Has the first scoring session of the current round already started?
@@ -40,18 +54,28 @@ function renderUpdatedStatus(now) {
     let notUpdated  = false;
 
     if (!currentRound) {
-        // Season not started or all done — use last completed
+        // Season over or not started — show last completed
         targetRound = lastCompletedRound();
     } else if (isRoundPartial(currentRound) || isRoundComplete(currentRound)) {
-        // Current round already has some results — always show it
+        // Current round has at least some data in JSON — always show it
         targetRound = currentRound;
     } else if (currentRoundScoringStarted(currentRound)) {
-        // Scoring has begun but no results logged yet -> NOT_UPDATED on current round
+        // First scoring session has begun but no JSON data yet — NOT_UPDATED
         targetRound = currentRound;
         notUpdated  = true;
     } else {
-        // We're in FP / pre-weekend -> show previous completed round
-        targetRound = lastCompletedRound() ?? currentRound;
+        // We are in FP / pre-weekend — no scoring session started yet.
+        // Show the previous round's status (almost always RACE UPDATED).
+        // Use last round with ANY data, not just fully completed ones.
+        const prevWithData = (() => {
+            let r = null;
+            for (const round of REG.rounds) {
+                if (round.id === currentRound.id) break;
+                if (RESULTS[round.id]) r = round;
+            }
+            return r;
+        })();
+        targetRound = prevWithData ?? lastCompletedRound() ?? currentRound;
     }
 
     if (!targetRound) {
@@ -63,27 +87,39 @@ function renderUpdatedStatus(now) {
 
     const rd = RESULTS[targetRound.id];
 
+    // The session the calendar says we should already have data for.
+    // = last scoring session that has already started on the clock.
+    // Falls back to first scoring session if weekend hasn't begun yet.
+    const calSession = lastStartedScoringSession(targetRound) ?? { key: firstScoringSession(targetRound) };
+    const calKey     = calSession.key;                       // e.g. "r"
+    const updatedKey = rd?.updated_to?.toLowerCase() ?? null; // e.g. "q"
+
+    // Is the JSON already up to date with the calendar session?
+    // We compare positions in the session order array.
+    const order      = sessionOrder(targetRound.fmt);
+    const calIdx     = order.indexOf(calKey);
+    const updatedIdx = updatedKey ? order.indexOf(updatedKey) : -1;
+    const isUpToDate = updatedIdx >= calIdx;
+
     let statusClass, statusText, sessionLabel;
 
-    if (notUpdated || !rd) {
-        // No data yet for this round — flag the first scoring session
-        const firstKey = firstScoringSession(targetRound);
+    if (!rd || notUpdated || !isUpToDate) {
+        // Points lag behind the calendar — show which session is missing
         statusClass  = 'neg';
         statusText   = 'NOT_UPDATED';
-        sessionLabel = (SESSION_LABELS[firstKey] ?? firstKey.toUpperCase()) + '[' + targetRound.id + ']';
+        sessionLabel = (SESSION_LABELS[calKey] ?? calKey.toUpperCase()) + ' [' + targetRound.id + ']';
     } else {
         const status = rd.status?.toLowerCase() ?? null;
-        const upTo   = rd.updated_to?.toLowerCase() ?? null;
         statusClass  = status === 'updated' ? 'pos' : status === 'provisional' ? 'warn' : 'muted';
         statusText   = status ? status.toUpperCase() : '—';
-        sessionLabel = upTo
-            ? (SESSION_LABELS[upTo] ?? upTo.toUpperCase()) + ' [' + targetRound.id + ']'
+        sessionLabel = updatedKey
+            ? (SESSION_LABELS[updatedKey] ?? updatedKey.toUpperCase()) + ' [' + targetRound.id + ']'
             : null;
     }
 
     el.innerHTML =
         `<span class="updated-status-row">` +
-        (sessionLabel ? `<span class="status-session">${sessionLabel}</span><span class="updated-sep"> // </span>` : '') +
+        (sessionLabel ? `<span class="status-session">${sessionLabel}</span><span class="updated-sep opacity-50"> // </span>` : '') +
         `<span class="label">STATUS_POINTS: </span>` +
         `<span class="${statusClass} fw-bold">${statusText}</span>` +
         `</span>`;
@@ -93,8 +129,16 @@ function renderBanner() {
     const total   = REG.rounds.length;
     const current = currentRound ? currentRound.n : REG.rounds.filter(r => isRoundComplete(r) || isRoundPartial(r)).length;
     const pct     = Math.round(current / total * 100);
-    const last    = lastCompletedRound();
-    const next    = currentRound;
+    // Last round = last with ANY data (partial or complete), not just fully scored
+    const lastWithData = (() => {
+        let r = null;
+        for (const round of REG.rounds) {
+            if (RESULTS[round.id]) r = round;
+        }
+        return r;
+    })();
+    const last = lastWithData;
+    const next = currentRound;
 
     if (cdInterval) clearInterval(cdInterval);
 
@@ -105,14 +149,31 @@ function renderBanner() {
                 ${last ? flagImg(last.cc, last.name) : ''}
                 <span class="fw-bold">${last ? last.name.toUpperCase() : 'N/A'}</span>
             </div>
-            ${last ? `<div class="banner-completed-tag"><i class="bi bi-check-circle me-1"></i>ROUND_${pad(last.n)}_COMPLETED</div>` : ''}
+            ${last ? (() => {
+                const isComplete = isRoundComplete(last);
+                const rd = RESULTS[last.id];
+                const upTo = rd?.updated_to?.toUpperCase() ?? '?';
+                const icon = isComplete ? 'bi-check-circle' : 'bi-hourglass-split';
+                const label = isComplete
+                    ? `ROUND_${pad(last.n)}_COMPLETED`
+                    : `ROUND_${pad(last.n)}_PARTIAL`;
+                const cls = isComplete ? 'banner-completed-tag' : 'banner-completed-tag banner-partial-tag';
+                return `<div class="${cls}"><i class="bi ${icon} me-1"></i>${label}</div>`;
+            })() : ''}
         </div>`;
 
     let nextBlock = '';
     // Check if all rounds are done — no next session to show
     const allRoundsDone = REG.rounds.every(r => isRoundComplete(r) || r.status === 'cancelled');
     if (next && !allRoundsDone) {
-        const sess = nextSession(next);
+        // If the current round has no remaining/live sessions (e.g. race finished but
+        // points not yet updated to "r"), fall through to the next upcoming round.
+        let displayRound = next;
+        let sess = nextSession(displayRound);
+        if (!sess) {
+            const fallback = deriveNextRound(next);
+            if (fallback) { displayRound = fallback; sess = nextSession(fallback); }
+        }
         if (sess) {
             const cd    = formatCD(sess.ms);
             const now0  = new Date();
@@ -130,17 +191,18 @@ function renderBanner() {
                    <div class="cd-sep">:</div>
                    <div class="cd-block"><div class="cd-digits" id="cd-s">${cd.s}</div><div class="cd-unit">SEC</div></div>`;
 
+            const isNext = displayRound !== next;
             nextBlock = `
             <div class="banner-sep"></div>
             <div class="p-3 ${isLiveNow ? 'live-banner-left' : 'banner-left'}">
-                <div class="banner-next-label">CURRENT_ROUND</div>
+                <div class="banner-next-label">${isNext ? 'NEXT_ROUND' : 'CURRENT_ROUND'}</div>
                 <div class="banner-round-flag mb-2">
-                    ${flagImg(next.cc, next.name)}
-                    <span class="fw-bold">${next.name.toUpperCase()}</span>
+                    ${flagImg(displayRound.cc, displayRound.name)}
+                    <span class="fw-bold">${displayRound.name.toUpperCase()}</span>
                 </div>
                 <div class="banner-sess-label">
                     <i class="bi bi-clock"></i>
-                    <span class="sess-label-name">${sess.label} <span class="muted">//</span> ${sessionDateLabel(sess.iso)}</span>
+                    <span class="sess-label-name">${sess.label} <span class="muted opacitiy-50">//</span> ${sessionDateLabel(sess.iso)}</span>
                 </div>
                 <div class="cd-wrap" id="cd-wrap-live">${cdContent}</div>
             </div>`;

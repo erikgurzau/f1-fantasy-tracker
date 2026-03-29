@@ -32,6 +32,7 @@ body { background:var(--bg-base); color:var(--text-main); padding-bottom:0; font
 .text-right { text-align:right; }
 .text-center { text-align:center; }
 .diff-small { font-size:.68rem; }
+.opacitiy-50 { opacity:.5; }
 
 .b  { border:1px solid var(--border); }
 .bb { border-bottom:1px solid var(--border); }

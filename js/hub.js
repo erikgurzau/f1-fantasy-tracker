@@ -205,26 +205,46 @@ function allSessionsHtml(round, isCurrent = false) {
     const now   = Date.now();
     return order.map(key => {
         const iso = sess[key]; if (!iso) return '';
-        const isPast = new Date(iso).getTime() < now;
+        const start   = new Date(iso).getTime();
+        const dur     = SESSION_DURATION[key] ?? 120 * 60 * 1000;
+        const isPast  = start < now;
+        const isLive  = isPast && now < start + dur;
+
+        if (isLive) {
+            // Live session — badge inline next to the time, row centered
+            return `
+            <div class="banner-sess-label sess-row" style="text-align:center;justify-content:center;">
+                <i class="bi bi-clock"></i>
+                <span class="sess-future">
+                    ${SESSION_LABELS[key] ?? key.toUpperCase()}
+                    <span class="muted opacitiy-50">//</span> ${sessionDateLabel(iso)}
+                </span>
+                <div class="live-badge" style="padding:0;font-size:.8rem;display:inline-flex;">
+                    <span class="live-dot"></span>LIVE
+                </div>
+            </div>`;
+        }
+
         if (isCurrent) {
-            // current round: past sessions get line-through + muted icon
+            // current round: past sessions muted, future sessions highlighted
             const doneClass  = isPast ? ' sess-past-done' : '';
             const iconClass  = isPast ? 'muted' : '';
             const labelColor = isPast ? 'muted' : 'sess-future';
             return `
             <div class="banner-sess-label sess-row">
-                <i class="bi bi-clock align-middle ${iconClass}"></i>
-                <span class="${labelColor}${doneClass}">${SESSION_LABELS[key] ?? key.toUpperCase()} 
-                <span class="muted">//</span> ${sessionDateLabel(iso)}</span>
+                <i class="bi bi-clock ${iconClass}"></i>
+                <span class="${labelColor}${doneClass}">${SESSION_LABELS[key] ?? key.toUpperCase()}
+                <span class="muted opacitiy-50">//</span> ${sessionDateLabel(iso)}</span>
             </div>`;
         }
+
         // upcoming/next: normal styling
         const labelColor = isPast ? 'sess-past' : 'sess-future';
         return `
             <div class="banner-sess-label sess-row">
-                <i class="bi bi-clock align-middle"></i>
+                <i class="bi bi-clock"></i>
                 <span class="${labelColor}">${SESSION_LABELS[key] ?? key.toUpperCase()}</span>
-                <span class="muted">//</span> ${sessionDateLabel(iso)}</span>
+                <span class="muted">//</span> ${sessionDateLabel(iso)}
             </div>`;
     }).join('');
 }

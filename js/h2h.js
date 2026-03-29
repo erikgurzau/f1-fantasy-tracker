@@ -237,7 +237,7 @@ function buildH2HGapChart(pA, pB, rounds, colA, colB) {
     const W     = step ? Math.max(480, n * step + H_PAD * 2) : 480;
     const H     = 200;
     const scrollable = step !== null;
-    const PAD   = { t: 20, r: H_PAD, b: 52, l: H_PAD };
+    const PAD   = { t: 28, r: H_PAD, b: 52, l: H_PAD };
     const chartW = W - PAD.l - PAD.r;
     const chartH = H - PAD.t - PAD.b;
 
@@ -254,7 +254,14 @@ function buildH2HGapChart(pA, pB, rounds, colA, colB) {
         const y   = Math.min(yS(v), yZero).toFixed(1);
         const h   = Math.abs(yS(v) - yZero);
         const col = v > 0 ? colA : v < 0 ? colB : 'var(--border)';
-        return `<rect x="${x}" y="${y}" width="${barW.toFixed(1)}" height="${Math.max(h,1).toFixed(1)}" fill="${col}" opacity="0.8"/>`;
+        const bar = `<rect x="${x}" y="${y}" width="${barW.toFixed(1)}" height="${Math.max(h,1).toFixed(1)}" fill="${col}" opacity="0.8"/>`;
+        if (v === 0) return bar;
+        const labelX = xS(i).toFixed(1);
+        const labelY = v > 0
+            ? (parseFloat(y) - 4).toFixed(1)
+            : (parseFloat(y) + Math.max(h,1) + 11).toFixed(1);
+        const label = `<text x="${labelX}" y="${labelY}" fill="${col}" font-size="8" font-weight="700" text-anchor="middle">+${Math.abs(v)}</text>`;
+        return bar + label;
     }).join('');
 
     const zeroLine = `<line x1="${PAD.l}" y1="${yZero}" x2="${PAD.l+chartW}" y2="${yZero}" stroke="var(--border)" stroke-width="1" stroke-dasharray="4,3"/>`;
@@ -325,11 +332,11 @@ function buildH2HRoundTable(pA, pB, rounds, colA, colB) {
         <div class="label mb-2"><i class="bi bi-list-ol me-2"></i>ROUND_BY_ROUND</div>
         <div class="stats-card p-0">
             <div class="h2h-round-row h2h-round-hd">
-                <div class="h2h-rr-round">RND</div>
+                <div class="h2h-rr-round">ROUND</div>
                 <div class="h2h-rr-pts" style="color:${colA}">${pA.code}</div>
                 <div class="h2h-rr-pts" style="color:${colB}">${pB.code}</div>
                 <div class="h2h-rr-cum">TOT</div>
-                <div class="h2h-rr-cum-gap">GAP</div>
+                <div class="h2h-rr-cum-gap"></div>
             </div>
             ${rows}
         </div>`;

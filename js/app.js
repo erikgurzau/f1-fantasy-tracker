@@ -124,7 +124,7 @@ window.onload = async () => {
     nextRound    = deriveNextRound();
     precompute();
 
-    document.getElementById('app-subtitle').textContent = `F1_FANTASY_TRACKER // ${REG.season}`;
+    document.getElementById('app-subtitle').innerHTML = `F1_FANTASY_TRACKER <span class="opacity-50">//</span> ${REG.season}`;
     document.getElementById('league-name').textContent  = lg.name;
     document.title = `${lg.name} // F1FT ${REG.season}`;
 

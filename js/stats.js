@@ -232,13 +232,15 @@ function buildDriverStats(rounds) {
     const totalPlayers = allPlayers.length || 1;
 
     let drivers = Object.entries(REG.drivers).map(([code, info]) => {
-        let totalPts = 0, totalExp = 0, count = 0, bestP = -Infinity, worstP = Infinity;
+        let totalPts = 0, totalExp = 0, count = 0, bestP = -Infinity, worstP = Infinity, bestR = null, worstR = null;
         rounds.forEach(r => {
             const d = RESULTS[r.id]?.drivers?.[code]; if (!d) return;
             const p = d.pts ?? 0;
             totalPts += p; totalExp += d.exp ?? 0; count++;
-            if (p > bestP) bestP = p;
-            if (p < worstP) worstP = p;
+            if (isRoundComplete(r)) {
+                if (p > bestP)  { bestP = p;  bestR = r; }
+                if (p < worstP) { worstP = p; worstR = r; }
+            }
         });
         if (!count) return null;
         const initP    = info.init_price;
@@ -249,8 +251,8 @@ function buildDriverStats(rounds) {
             p.team.captain === code || p.team.drivers.includes(code)
         ).length;
         return { code, name: info.name, con: info.constructor.toLowerCase(),
-            totalPts, initP, currP, priceDiff: currP - initP,
-            avgPts, ptsPerM: currP > 0 ? totalPts / currP : 0, acc, bestP, worstP, selCount, totalPlayers };
+            totalPts, totalExp, initP, currP, priceDiff: currP - initP,
+            avgPts, ptsPerM: currP > 0 ? totalPts / currP : 0, acc, bestP, worstP, bestR, worstR, selCount, totalPlayers };
     }).filter(Boolean).sort((a, b) => b.totalPts - a.totalPts);
 
     const allowedCodes = getPlayerDriverCodes(statsPlayerFilter);
@@ -259,7 +261,7 @@ function buildDriverStats(rounds) {
     const inner = drivers.length
         ? `<div class="stat-table">${drivers.map((d, i) => buildStatCardRow(
             i+1, `var(--${d.con})`, d.code, d.name, d.totalPts, d.avgPts, d.ptsPerM, d.priceDiff,
-            d.acc, d.bestP, d.worstP, i===0, d.initP, d.currP, d.selCount, d.totalPlayers
+            d.acc, d.totalExp, d.bestP, d.worstP, d.bestR, d.worstR, i===0, d.initP, d.currP, d.selCount, d.totalPlayers
           )).join('')}</div>`
         : `<div class="stat-table b"><div class="stats-empty label">NO_DATA FOR SELECTED PLAYER</div></div>`;
 
@@ -279,21 +281,23 @@ function buildConstructorStats(rounds) {
     });
 
     let constructors = Object.entries(REG.constructors).map(([code, info]) => {
-        let totalPts = 0, totalExp = 0, count = 0, bestP = -Infinity, worstP = Infinity;
+        let totalPts = 0, totalExp = 0, count = 0, bestP = -Infinity, worstP = Infinity, bestR = null, worstR = null;
         rounds.forEach(r => {
             const c = RESULTS[r.id]?.constructors?.[code]; if (!c) return;
             const p = c.pts ?? 0;
             totalPts += p; totalExp += c.exp ?? 0; count++;
-            if (p > bestP) bestP = p;
-            if (p < worstP) worstP = p;
+            if (isRoundComplete(r)) {
+                if (p > bestP)  { bestP = p;  bestR = r; }
+                if (p < worstP) { worstP = p; worstR = r; }
+            }
         });
         if (!count) return null;
         const initP = info.init_price, currP = latestPrice(code,'constructors') ?? initP;
         const avgPts = totalPts / count;
         const acc    = totalExp !== 0 ? Math.max(0, 100 - Math.abs(totalPts - totalExp) / Math.abs(totalExp) * 100) : 0;
         const selCount = conPicks[code] ?? 0;
-        return { code, name: info.name, totalPts, initP, currP, priceDiff: currP - initP,
-            avgPts, ptsPerM: currP > 0 ? totalPts / currP : 0, acc, bestP, worstP, selCount };
+        return { code, name: info.name, totalPts, totalExp, initP, currP, priceDiff: currP - initP,
+            avgPts, ptsPerM: currP > 0 ? totalPts / currP : 0, acc, bestP, worstP, bestR, worstR, selCount };
     }).filter(Boolean).sort((a, b) => b.totalPts - a.totalPts);
 
     const allowedCodes = getPlayerConstructorCodes(statsPlayerFilter);
@@ -302,7 +306,7 @@ function buildConstructorStats(rounds) {
     const inner = constructors.length
         ? `<div class="stat-table">${constructors.map((c, i) => buildStatCardRow(
             i+1, `var(--${c.code.toLowerCase()})`, c.code, c.name, c.totalPts, c.avgPts, c.ptsPerM, c.priceDiff,
-            c.acc, c.bestP, c.worstP, i===0, c.initP, c.currP, c.selCount, null
+            c.acc, c.totalExp, c.bestP, c.worstP, c.bestR, c.worstR, i===0, c.initP, c.currP, c.selCount, null
           )).join('')}</div>`
         : `<div class="stat-table b"><div class="stats-empty label">NO_DATA FOR SELECTED PLAYER</div></div>`;
 
@@ -313,10 +317,48 @@ function buildConstructorStats(rounds) {
 }
 
 // ── SHARED ROW BUILDER ────────────────────────────────────
-function buildStatCardRow(rank, tagColor, code, name, totalPts, avgPts, ptsPerM, priceDiff, acc, bestP, worstP, isTop, initP, currP, selCount = null, totalPlayers = null) {
+function buildStatCardRow(rank, tagColor, code, name, totalPts, avgPts, ptsPerM, priceDiff, acc, totalExp, bestP, worstP, bestR, worstR, isTop, initP, currP, selCount = null, totalPlayers = null) {
     const ptsC = isTop ? 'warn' : totalPts < 0 ? 'neg' : '';
     const sc   = (label, val, cls = '') =>
         `<div class="sc"><div class="sl">${label}</div><div class="sv${cls ? ' '+cls : ''}">${val}</div></div>`;
+
+    const uid = `tt-${code}-${rank}`;
+
+    function roundTooltipCell(label, pts, round, ttId, cls) {
+        const roundInfo = round
+            ? `<span class="xpt-tooltip-label">ROUND_${pad(round.n)}</span>
+               <span style="display:flex;align-items:center;gap:.35rem;margin-top:3px">
+                   <img src="https://flagcdn.com/w40/${round.cc ?? 'un'}.png" width="20" height="13" style="border:1px solid var(--border)">
+                   <span style="font-size:.78rem;color:var(--text-main)">${round.name.toUpperCase()}</span>
+               </span>`
+            : `<span class="xpt-tooltip-label">—</span>`;
+        return `
+            <div class="sc">
+                <div class="sl">${label}</div>
+                <div class="sv${cls ? ' ' + cls : ''}" style="display:flex;align-items:center;gap:.3rem;">
+                    ${pts}
+                    <span class="xpt-tooltip-wrap" onclick="toggleXptTooltip('${ttId}')">
+                        <i class="bi bi-info-circle xpt-info-icon"></i>
+                        <span class="xpt-tooltip" id="${ttId}">${roundInfo}</span>
+                    </span>
+                </div>
+            </div>`;
+    }
+
+    const accCell = `
+        <div class="sc">
+            <div class="sl">ACCURACY_XPT</div>
+            <div class="sv ${accClass(acc)}" style="display:flex;align-items:center;gap:.3rem;">
+                ${acc.toFixed(0)}%
+                <span class="xpt-tooltip-wrap" onclick="toggleXptTooltip('${uid}')">
+                    <i class="bi bi-info-circle xpt-info-icon"></i>
+                    <span class="xpt-tooltip" id="${uid}">
+                        <span class="xpt-tooltip-label">TOT_XPT</span>
+                        <span class="xpt-tooltip-val">${totalExp.toFixed(1)}</span>
+                    </span>
+                </span>
+            </div>
+        </div>`;
 
     return `
         <div class="stat-card-row px-2 pb-2 pt-1 ${isTop ? 'stat-card-row--winner' : ''}">
@@ -339,12 +381,12 @@ function buildStatCardRow(rank, tagColor, code, name, totalPts, avgPts, ptsPerM,
                 <div class="stat-sec-row">
                     ${sc('AVG_PTS/RND', avgPts.toFixed(1), avgPts < 0 ? 'neg' : '')}
                     ${sc('PTS/M',   ptsPerM.toFixed(1), ptsPerM < 0 ? 'neg' : '')}
-                    ${sc('ACCURACY_XPT',     acc.toFixed(0)+'%', accClass(acc))}
+                    ${accCell}
                 </div>
                 <div class="stat-sec-row">
                     ${sc('SELECTED', selCount !== null ? (totalPlayers !== null ? selCount + '/' + totalPlayers : selCount) : '—', !selCount || selCount == 0 ? 'muted' : '')}
-                    ${sc('HIGHEST_PTS', bestP, bestP < 0 ? 'neg' : '')}
-                    ${sc('LOWEST_PTS', worstP, worstP < 0 ? 'neg' : '')}
+                    ${roundTooltipCell('HIGHEST_PTS', bestP, bestR, `${uid}-best`, bestP < 0 ? 'neg' : '')}
+                    ${roundTooltipCell('LOWEST_PTS',  worstP, worstR, `${uid}-worst`, worstP < 0 ? 'neg' : '')}
                 </div>
                 <div class="stat-sec-row">
                     ${sc('INIT_PRICE', initP.toFixed(1)+'M')}
@@ -354,3 +396,20 @@ function buildStatCardRow(rank, tagColor, code, name, totalPts, avgPts, ptsPerM,
             </div>
         </div>`;
 }
+function toggleXptTooltip(id) {
+    const tt = document.getElementById(id);
+    if (!tt) return;
+    const isOpen = tt.classList.toggle('open');
+    if (isOpen) {
+        // close all others
+        document.querySelectorAll('.xpt-tooltip.open').forEach(el => {
+            if (el.id !== id) el.classList.remove('open');
+        });
+    }
+}
+
+document.addEventListener('click', e => {
+    if (!e.target.closest('.xpt-tooltip-wrap')) {
+        document.querySelectorAll('.xpt-tooltip.open').forEach(el => el.classList.remove('open'));
+    }
+}, true);

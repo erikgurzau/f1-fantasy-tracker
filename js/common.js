@@ -24,8 +24,8 @@ const SESSION_ORDER_STD = ['fp1', 'fp2', 'fp3', 'q', 'r'];
 const SESSION_ORDER_SPR = ['fp1', 'sq', 'sr', 'q', 'r'];
 const SESSION_LABELS = {
     fp1: 'FP1', fp2: 'FP2', fp3: 'FP3',
-    sq: 'SPRINT_QUALIFYING', sr: 'SPRINT_RACE',
-    q: 'QUALIFYING', r: 'RACE',
+    sq: 'SPRINT_QUALIFY', sr: 'SPRINT_RACE',
+    q: 'QUALIFY', r: 'RACE',
 };
 
 function sessionOrder(fmt) {

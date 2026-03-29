@@ -81,3 +81,38 @@
 .rec-sub-row    { display:flex; align-items:center; gap:.45rem; }
 .rec-sub        { display:inline-flex; align-items:center; font-size:.75rem; color:var(--text-main); background:var(--bg-surface); padding:.15rem .45rem; border:1px solid var(--border); flex-shrink:0; }
 .rec-sub-extra  { font-size:.7rem; color:var(--text-muted); display:inline-flex; align-items:center; gap:.2rem; vertical-align:middle; }
+.rotateY180 { transform:rotateY(180deg); }
+
+/* ── XPT TOOLTIP ─────────────────────────────────────────── */
+.xpt-tooltip-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+}
+.xpt-info-icon {
+    font-size: .72rem;
+    color: var(--text-muted);
+    transition: color .15s;
+    line-height: 1;
+}
+.xpt-tooltip-wrap:hover .xpt-info-icon { color: var(--accent); }
+.xpt-tooltip {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg-hover);
+    border: 1px solid var(--accent);
+    padding: .8rem;
+    white-space: nowrap;
+    z-index: 200;
+    flex-direction: column;
+    align-items: center;
+    gap: .1rem;
+    pointer-events: none;
+}
+.xpt-tooltip.open { display: flex; }
+.xpt-tooltip-label { font-size: .70rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; }
+.xpt-tooltip-val   { font-size: .92rem; font-weight: 700; color: var(--text-main); }

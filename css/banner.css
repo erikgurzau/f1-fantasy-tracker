@@ -13,6 +13,7 @@
     font-weight:700; margin-bottom:.2rem;
 }
 .banner-completed-tag { font-size:.78rem; color:var(--pos); margin-top:.5rem; }
+.banner-partial-tag   { color:var(--warn); }
 
 .banner-left {
     position:relative;
@@ -27,7 +28,7 @@
 @keyframes borderTicker {
     0%   { top:0;    height:8px; }
     25%  { height:50px; }
-    50%  { top:92%;  height:8px; }
+    50%  { top:95%;  height:8px; }
     75%  { height:50px; }
     100% { top:0;    height:8px; }
 }
