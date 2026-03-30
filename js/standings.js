@@ -66,7 +66,7 @@ function renderStandings() {
             </div>`;
 
         html += `
-            <div class="standings-row${isLeader ? ' leader-row' : ''}">
+            <div class="standings-row">
                 <div class="standings-main" onclick="toggleDetail('sd-${p.code}',this)">
                     <div class="s-rank-wrap">${trendHtml}<div class="s-rank${rankClass}">${p.rank}</div></div>
                     <div class="s-name">

@@ -116,17 +116,17 @@ function buildSeasonRecords(players, rounds) {
 
         { icon:'bi-arrow-up-circle pos',   label:'BEST_ROUND',
           val:`${bestPts}`,                 unit:'PTS',
-          subs: bestRounds.map(x => ({ code: x.p.code, extra: `R${pad(x.r.n)} ${fi(x.r.cc)}` })) },
+          subs: bestRounds.map(x => ({ code: x.p.code, extra: `${fi(x.r.cc)} ${pad(x.r.name)}` })) },
 
         { icon:'bi-arrow-down-circle neg', label:'WORST_ROUND',
           val:`${worstPts}`,                unit:'PTS',
-          subs: worstRounds.map(x => ({ code: x.p.code, extra: `R${pad(x.r.n)} ${fi(x.r.cc)}` })) },
+          subs: worstRounds.map(x => ({ code: x.p.code, extra: `${fi(x.r.cc)} ${pad(x.r.name)}` })) },
 
         { icon:'bi-bar-chart-line pos',    label:'HIGHEST_AVG',
           val: highAvgVal.toFixed(1),       unit:'PTS',
           subs: highAvgs.map(x => ({ code: x.p.code, extra: null })) },
 
-        { icon:'bi-bar-chart-line neg',    label:'LOWEST_AVG',
+        { icon:'bi-bar-chart-line neg rotate-y-180',    label:'LOWEST_AVG',
           val: lowAvgVal.toFixed(1),        unit:'PTS',
           subs: lowAvgs.map(x => ({ code: x.p.code, extra: null })) },
 
@@ -166,7 +166,7 @@ function buildSeasonRecords(players, rounds) {
                 </span>`;
             }
             return `<span class="rec-sub-row">
-                <span class="rec-sub"><span class="fw-bold">${code}</span></span>${extra ? `<span class="rec-sub-extra muted">${extra}</span>` : ''}${infoIcon}
+                <span class="rec-sub"><span class="fw-bold">${code}</span></span>${extra ? `<span class="rec-sub-extra muted text-uppercase">${extra}</span>` : ''}${infoIcon}
             </span>`;
         }).join('');
         return `

@@ -12,6 +12,7 @@ function switchTab(name) {
         pane.classList.toggle('active', pane.id === `pane-${name}`);
     });
     activeTab = name;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     if (!tabRendered[name]) {
         tabRendered[name] = true;
         if (name === 'stats') renderStats();

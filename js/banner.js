@@ -206,8 +206,16 @@ function renderBanner() {
                     <span class="fw-bold">${displayRound.name.toUpperCase()}</span>
                 </div>
                 <div class="banner-sess-label">
-                    <i class="bi bi-clock"></i>
-                    <span class="sess-label-name">${sess.label} <span class="muted opacitiy-50">//</span> ${sessionDateLabel(sess.iso)}</span>
+                    <span class="sess-name">${sess.label}</span>
+                    <span class="sess-sep">//</span>
+                    <span>
+                        <i class="bi bi-calendar3 sess-meta-icon"></i>
+                        <span class="sess-date">${sessionDateLabel(sess.iso).split(',')[0]}</span>
+                    </span>
+                    <span class="ms-2">
+                        <i class="bi bi-clock sess-meta-icon"></i>
+                        <span class="sess-time">${sessionDateLabel(sess.iso).split(',')[1]?.trim() ?? ''}</span>
+                    </span>
                 </div>
                 <div class="cd-wrap" id="cd-wrap-live">${cdContent}</div>
             </div>`;

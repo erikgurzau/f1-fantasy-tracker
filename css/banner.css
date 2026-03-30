@@ -16,30 +16,71 @@
 .banner-partial-tag   { color:var(--warn); }
 
 .banner-left {
-    position:relative;
-    padding-left:1.1rem;
+    position: relative;
+    padding-left: 1.1rem;
 }
 .banner-left::before {
-    content:'';
-    position:absolute; left:0;
-    width:1px; background:var(--accent);
-    animation:borderTicker 2s ease-in-out infinite;
+    content: '';
+    position: absolute;
+    inset: -1.5px;
+    background: conic-gradient(
+        from var(--angle, 0deg),
+        transparent 0deg,
+        var(--accent) 60deg,
+        transparent 120deg
+    );
+    z-index: 0;
+    animation: spinBorder 4s linear infinite;
 }
-@keyframes borderTicker {
-    0%   { top:0;    height:8px; }
-    25%  { height:50px; }
-    50%  { top:95%;  height:8px; }
-    75%  { height:50px; }
-    100% { top:0;    height:8px; }
+.banner-left::after {
+    content: '';
+    position: absolute;
+    inset: 1.5px;
+    background: var(--bg-surface);
+    z-index: 1;
+}
+.banner-left > * {
+    position: relative;
+    z-index: 2;
 }
 
 .banner-next-label  { font-size:.82rem; text-transform:uppercase; color:var(--text-muted); margin-bottom:.35rem; }
-.banner-sess-label  { font-size:.8rem; color:var(--text-muted); }
-.sess-row           { margin-bottom:.25rem; text-align:center; }
-.sess-label-name    { color:var(--text-main); }
-.sess-label-date    { color:var(--text-muted); font-size:.75rem; }
-.sess-past          { color:var(--text-muted); margin-left:.2rem; }
-.sess-future        { color:var(--text-main); margin-left:.2rem; }
+.banner-next-label  { font-size:.82rem; text-transform:uppercase; color:var(--text-muted); margin-bottom:.35rem; }
+.banner-sess-label {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .8rem;
+    color: var(--text-muted);
+    margin-bottom: .5rem;
+}
+.banner-sess-label.completed { opacity: 0.45; }
+.sess-row-inner {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    position: relative;
+}
+.sess-row-inner.completed::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 1px;
+    background: var(--text-muted);
+    pointer-events: none;
+}
+.sess-name      { color:var(--text-main); font-weight:700; }
+.sess-sep       { color:var(--text-muted); opacity:.4; }
+.sess-meta-icon { font-size:.72rem; }
+.sess-date      { color:var(--text-main); }
+.sess-time      { color:var(--text-main); }
+.sess-live-tag  {
+    color:var(--neg); font-weight:700; font-size:.72rem;
+    letter-spacing:.05em;
+    animation:livepulse 1.4s ease-in-out infinite;
+}
 .sess-cancelled-msg { color:var(--text-muted); font-size:.8rem; }
 
 /* ── TERMINAL STATUS BLOCK ───────────────────────────────── */
@@ -77,9 +118,9 @@
 @keyframes livepulse { 0%,100%{opacity:1} 50%{opacity:.4} }
 .live-badge {
     display:inline-flex; align-items:center; gap:.4rem;
-    font-size:1rem; font-weight:700; color:var(--neg);
+    font-size:1.3rem; font-weight:700; color:var(--neg);
     text-transform:uppercase;
-    padding:.5rem .5rem 0 .5rem;
+    padding-left:.5rem;
     animation:livepulse 1.4s ease-in-out infinite;
 }
 .live-dot {

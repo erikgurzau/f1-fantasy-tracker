@@ -49,7 +49,45 @@ body { background:var(--bg-base); color:var(--text-main); padding-bottom:0; font
     background:var(--bg-surface); border:1px solid var(--border);
     padding:1.1rem; margin-bottom:1rem;
 }
-.card-db--winner { border-color:var(--warn); }
+/* ── CARD WINNER — bordo animato clockwise ── */
+.card-db--winner {
+    border: none;
+    position: relative;
+    background: var(--bg-surface);
+}
+.card-db--winner::before {
+    content: '';
+    position: absolute;
+    inset: -1.5px;
+    background: conic-gradient(
+        from var(--angle, 0deg),
+        transparent 0deg,
+        var(--warn) 60deg,
+        transparent 120deg
+    );
+    z-index: 0;
+    animation: spinBorder 4s linear infinite;
+}
+.card-db--winner::after {
+    content: '';
+    position: absolute;
+    inset: 1.5px;
+    background: var(--bg-surface);
+    z-index: 1;
+}
+.card-db--winner > * {
+    position: relative;
+    z-index: 2;
+}
+
+@property --angle {
+    syntax: '<angle>';
+    inherits: false;
+    initial-value: 0deg;
+}
+@keyframes spinBorder {
+    to { --angle: 360deg; }
+}
 .card-db-flag { width:32px; height:20px; border:1px solid var(--border); margin-bottom:4px; }
 .card-db .summary {
     display:grid; grid-template-columns:1fr auto 74px;
@@ -73,4 +111,4 @@ body { background:var(--bg-base); color:var(--text-main); padding-bottom:0; font
 
 .diff-inline { display:flex; align-items:center; font-size:.72rem; }
 
-.flag-inline { border:1px solid var(--border); vertical-align:middle; margin:0 3px; }
+.flag-inline { border:1px solid var(--border); vertical-align:middle; margin:3px; }

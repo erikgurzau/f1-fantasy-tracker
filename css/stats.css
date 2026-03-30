@@ -43,7 +43,35 @@
 /* stat card rows */
 .stat-table          { border:1px solid var(--border); }
 .stat-card-row       { background:var(--bg-surface); border-bottom:1px solid var(--border); }
-.stat-card-row--winner { border:1px solid var(--warn); }
+/* ── STAT CARD ROW WINNER — bordo animato clockwise ── */
+.stat-card-row--winner {
+    position: relative;
+    background: var(--bg-surface);
+}
+.stat-card-row--winner::before {
+    content: '';
+    position: absolute;
+    inset: -1.5px;
+    background: conic-gradient(
+        from var(--angle, 0deg),
+        transparent 0deg,
+        var(--warn) 60deg,
+        transparent 120deg
+    );
+    z-index: 0;
+    animation: spinBorder 4s linear infinite;
+}
+.stat-card-row--winner::after {
+    content: '';
+    position: absolute;
+    inset: 1.5px;
+    background: var(--bg-surface);
+    z-index: 1;
+}
+.stat-card-row--winner > * {
+    position: relative;
+    z-index: 2;
+}
 .stat-card-row:last-child { border-bottom:none; }
 
 .stat-top     { display:flex; align-items:center; justify-content:space-between; gap:.5rem; padding:.55rem; }
@@ -80,7 +108,7 @@
 .rec-subs       { display:grid; grid-template-columns:auto 1fr; flex-direction:column; gap:.3rem; margin-top:.25rem; }
 .rec-sub-row    { display:flex; align-items:center; gap:.45rem; }
 .rec-sub        { display:inline-flex; align-items:center; font-size:.75rem; color:var(--text-main); background:var(--bg-surface); padding:.15rem .45rem; border:1px solid var(--border); flex-shrink:0; }
-.rec-sub-extra  { font-size:.7rem; color:var(--text-muted); display:inline-flex; align-items:center; gap:.2rem; vertical-align:middle; }
+.rec-sub-extra  { font-size:.7rem; color:var(--text-muted); display:inline-flex; align-items:center; vertical-align:middle; }
 .rotateY180 { transform:rotateY(180deg); }
 
 /* ── XPT TOOLTIP ─────────────────────────────────────────── */

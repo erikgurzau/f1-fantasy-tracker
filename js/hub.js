@@ -116,7 +116,7 @@ function buildTeamInsights(roundId, budget = 100, useInit = insightsUseInitPrice
         const round = REG.rounds.find(r => r.id === roundId);
         const cc    = round?.cc ?? 'un';
         const roundTag = round
-            ? `<div class="s-player-name ps-4" style="margin-left:2px">R${pad(round.n)} <img src="https://flagcdn.com/w40/${cc}.png" width="16" height="11" class="flag-inline">${round.name.toUpperCase()}</div>`
+            ? `<div class="s-player-name ps-4"><img src="https://flagcdn.com/w40/${cc}.png" width="16" height="11" class="flag-inline">${round.name.toUpperCase()}</div>`
             : '';
         return `
             <div class="card-db">
@@ -204,47 +204,32 @@ function allSessionsHtml(round, isCurrent = false) {
     const sess  = round.sessions ?? {};
     const now   = Date.now();
     return order.map(key => {
-        const iso = sess[key]; if (!iso) return '';
-        const start   = new Date(iso).getTime();
-        const dur     = SESSION_DURATION[key] ?? 120 * 60 * 1000;
-        const isPast  = start < now;
-        const isLive  = isPast && now < start + dur;
+        const iso    = sess[key]; if (!iso) return '';
+        const start  = new Date(iso).getTime();
+        const dur    = SESSION_DURATION[key] ?? 120 * 60 * 1000;
+        const isPast = start < now;
+        const isLive = isPast && now < start + dur;
 
-        if (isLive) {
-            // Live session — badge inline next to the time, row centered
-            return `
-            <div class="banner-sess-label sess-row" style="text-align:center;justify-content:center;">
-                <i class="bi bi-clock"></i>
-                <span class="sess-future">
-                    ${SESSION_LABELS[key] ?? key.toUpperCase()}
-                    <span class="muted opacitiy-50">//</span> ${sessionDateLabel(iso)}
-                </span>
-                <div class="live-badge" style="padding:0;font-size:.8rem;display:inline-flex;">
-                    <span class="live-dot"></span>LIVE
-                </div>
-            </div>`;
-        }
+        const label    = SESSION_LABELS[key] ?? key.toUpperCase();
+        const datePart = sessionDateLabel(iso).split(',')[0];
+        const timePart = sessionDateLabel(iso).split(',')[1]?.trim() ?? '';
+        const completed    = isCurrent && isPast && !isLive;
 
-        if (isCurrent) {
-            // current round: past sessions muted, future sessions highlighted
-            const doneClass  = isPast ? ' sess-past-done' : '';
-            const iconClass  = isPast ? 'muted' : '';
-            const labelColor = isPast ? 'muted' : 'sess-future';
-            return `
-            <div class="banner-sess-label sess-row">
-                <i class="bi bi-clock ${iconClass}"></i>
-                <span class="${labelColor}${doneClass}">${SESSION_LABELS[key] ?? key.toUpperCase()}
-                <span class="muted opacitiy-50">//</span> ${sessionDateLabel(iso)}</span>
-            </div>`;
-        }
-
-        // upcoming/next: normal styling
-        const labelColor = isPast ? 'sess-past' : 'sess-future';
         return `
-            <div class="banner-sess-label sess-row">
-                <i class="bi bi-clock"></i>
-                <span class="${labelColor}">${SESSION_LABELS[key] ?? key.toUpperCase()}</span>
-                <span class="muted">//</span> ${sessionDateLabel(iso)}
+            <div class="banner-sess-label sess-row ${completed ? 'completed' : ''}" style="justify-content:center">
+                <span class="sess-row-inner${completed ? ' completed' : ''}">
+                    <span class="sess-name ${completed ? 'muted' : ''}">${label}</span>
+                    <span class="sess-sep">//</span>
+                    <span>
+                        <i class="bi bi-calendar3 sess-meta-icon"></i>
+                        <span class="sess-date ${completed ? 'muted' : ''}">${datePart}</span>
+                    </span>
+                    <span class="ms-2">
+                        <i class="bi bi-clock sess-meta-icon"></i>
+                        <span class="sess-time ${completed ? 'muted' : ''}">${timePart}</span>
+                    </span>
+                    ${isLive ? '<span class="sess-live-tag">LIVE</span>' : ''}
+                </span>
             </div>`;
     }).join('');
 }
