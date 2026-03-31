@@ -461,19 +461,23 @@ function buildPlayerStats(rounds) {
                         <div class="stat-kpis">
                             <div class="sc text-right">
                                 <div class="sl">TOT_PTS</div>
-                                <div class="sv fw-bold${ptsC ? ' '+ptsC : ''}">${p.totalPts}</div>
+                                <div class="sv fw-bold${ptsC ? ' '+ptsC : ''}">
+                                    <span class="diff-small ${gap < 0 ? 'neg' : gap === 0 ? 'muted' : 'pos'}" style="font-size:.65rem;margin-left:3px;">${gap === 0 ? '' : gap}</span>
+                                    ${p.totalPts}
+                                </div>
                             </div>
                         </div>
                     </div>
                     <div class="stat-secondary">
                         <div class="stat-sec-row">
                             ${sc('AVG_PTS/RND', p.avgPts.toFixed(1), p.avgPts < 0 ? 'neg' : '')}
-                            ${sc('WINS', p.wins, p.wins === 0 ? 'muted' : 'warn')}
-                            ${sc('GAP', gap === 0 ? '<span class="pos gap-leader">LEADER</span>' : gap, gap < 0 ? 'neg' : 'muted')}                        </div>
+                            ${sc('PTS/M', (p.totalPts / (p.budgetCurr || 1)).toFixed(1))}
+                            ${accCell}
+                        </div>
                         <div class="stat-sec-row">
+                            ${sc('WINS', p.wins, p.wins === 0 ? 'muted' : 'warn')}
                             ${roundTooltipCell('HIGHEST_PTS', p.bestP, p.bestR, `${uid}-best`, p.bestP < 0 ? 'neg' : '')}
                             ${roundTooltipCell('LOWEST_PTS',  p.worstP, p.worstR, `${uid}-worst`, p.worstP < 0 ? 'neg' : '')}
-                            ${accCell}
                         </div>
                         <div class="stat-sec-row">
                             ${sc('INIT_BUDGET', p.budgetInit.toFixed(1)+'M')}
