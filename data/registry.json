@@ -28,14 +28,14 @@
         "MER":{"name":"Mercedes","init_price":29.3},
         "MCL":{"name":"McLaren","init_price":28.9},
         "FER":{"name":"Ferrari","init_price":23.3},
-        "RED":{"name":"Red Bull","init_price":22.0},
-        "AST":{"name":"Aston Martin","init_price":14.0},
-        "WIL":{"name":"Williams","init_price":11.0},
+        "RED":{"name":"Red Bull","init_price":28.2},
+        "AST":{"name":"Aston Martin","init_price":10.3},
+        "WIL":{"name":"Williams","init_price":12.0},
         "ALP":{"name":"Alpine","init_price":10.5},
         "HAA":{"name":"Haas","init_price":7.4},
         "VRB":{"name":"Racing Bulls","init_price":6.3},
-        "AUD":{"name":"Audi","init_price":5.8},
-        "CAD":{"name":"Cadillac","init_price":5.5}
+        "AUD":{"name":"Audi","init_price":6.6},
+        "CAD":{"name":"Cadillac","init_price":6}
     },
     "rounds":[
         {"id":"australia","n":1,"name":"Australia","cc":"au","date":"6-8 Mar","fmt":"std","sessions":{"fp1":"2026-03-06T01:30Z","fp2":"2026-03-06T05:00Z","fp3":"2026-03-07T01:30Z","q":"2026-03-07T05:00Z","r":"2026-03-08T04:00Z"}},
