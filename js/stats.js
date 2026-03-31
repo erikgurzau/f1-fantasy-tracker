@@ -372,7 +372,7 @@ function buildConstructorStats(rounds) {
     const inner = constructors.length
         ? `<div class="stat-table">${constructors.map((c, i) => buildStatCardRow(
             i+1, `var(--${c.code.toLowerCase()})`, c.code, c.name, c.totalPts, c.avgPts, c.ptsPerM, c.priceDiff,
-            c.acc, c.totalExp, c.bestP, c.worstP, c.bestR, c.worstR, i===0, c.initP, c.currP, c.selCount, null
+            c.acc, c.totalExp, c.bestP, c.worstP, c.bestR, c.worstR, i===0, c.initP, c.currP, c.selCount, totalPlayers2
           )).join('')}</div>`
         : `<div class="stat-table b"><div class="stats-empty label">NO_DATA FOR SELECTED PLAYER</div></div>`;
 
