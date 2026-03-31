@@ -31,7 +31,7 @@
         "RED":{"name":"Red Bull","init_price":28.2},
         "AST":{"name":"Aston Martin","init_price":10.3},
         "WIL":{"name":"Williams","init_price":12.0},
-        "ALP":{"name":"Alpine","init_price":10.5},
+        "ALP":{"name":"Alpine","init_price":12.5},
         "HAA":{"name":"Haas","init_price":7.4},
         "VRB":{"name":"Racing Bulls","init_price":6.3},
         "AUD":{"name":"Audi","init_price":6.6},
