@@ -114,7 +114,7 @@
       "ALP": {"pts":25,"exp":19.3,"price":14.3},
       "AST": {"pts":-12,"exp":-18.3,"price":8.5},
       "AUD": {"pts":23,"exp":15.4,"price":5.6},
-      "CAD": {"pts":5,"exp":0.1,"price":5.4},
+      "CAD": {"pts":5,"exp":0.1,"price":5},
       "FER": {"pts":75,"exp":72.4,"price":24.2},
       "HAA": {"pts":-4,"exp":24.8,"price":9.2},
       "MCL": {"pts":72,"exp":52.1,"price":28.6},
