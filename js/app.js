@@ -5,6 +5,10 @@ let activeTab = 'overview';
 const tabRendered = { overview: false, stats: false, h2h: false };
 
 function switchTab(name) {
+    if (activeTab === name) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+    }
     document.querySelectorAll('.nav-tab').forEach(btn => {
         btn.classList.toggle('active', btn.getAttribute('onclick').includes(`'${name}'`));
     });
@@ -137,4 +141,8 @@ window.onload = async () => {
     renderStandings();
     renderCarousel();
     renderHub();
+
+    // Set navbar height CSS var for sticky elements
+    const navEl = document.querySelector('.nav-tabs-db');
+    if (navEl) document.documentElement.style.setProperty('--navbar-h', navEl.offsetHeight + 'px');
 };

@@ -144,3 +144,35 @@
 .xpt-tooltip.open { display: flex; }
 .xpt-tooltip-label { font-size: .70rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; }
 .xpt-tooltip-val   { font-size: .92rem; font-weight: 700; color: var(--text-main); }
+
+/* ── STATS SHORTCUTS ─────────────────────────────────────── */
+.stats-shortcuts {
+    position: sticky;
+    top: var(--navbar-h, 36px);
+    z-index: 40;
+    display: flex;
+    gap: .5rem;
+    margin-bottom: 1rem;
+    background: var(--bg-base);
+    padding: .6rem 0;
+}
+.stats-shortcut-btn {
+    display: inline-flex; align-items: center; gap: .4rem;
+    background: var(--bg-surface); border: 1px solid var(--border);
+    color: var(--text-muted); font-family: inherit; font-size: .72rem;
+    text-transform: uppercase; letter-spacing: .05em;
+    padding: .45rem .85rem; cursor: pointer; flex: 1;
+    justify-content: center;
+    transition: border-color .15s, color .15s;
+    white-space: nowrap; overflow: hidden;
+}
+.stats-shortcut-btn span { overflow: hidden; text-overflow: ellipsis; }
+.stats-shortcut-btn.active span { overflow: visible; text-overflow: unset; }
+.stats-shortcut-btn:hover  { border-color: var(--accent); color: var(--accent); }
+.stats-shortcut-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(88,166,255,.08); }
+.stats-shortcut-btn i { font-size: .85rem; flex-shrink: 0; }
+
+@media (max-width: 480px) {
+    .stats-shortcut-btn:not(.active) span { display: none; }
+    .stats-shortcut-btn:not(.active) { padding: .45rem .65rem; flex: 0; }
+}

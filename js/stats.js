@@ -15,9 +15,40 @@ function renderStats() {
     wrap.innerHTML = `
         ${buildSeasonRecords(players, doneRounds)}
         ${buildPlayerFilter()}
+        ${buildStatsShortcuts()}
         ${buildDriverStats(doneRounds)}
         ${buildConstructorStats(doneRounds)}
+        ${buildPlayerStats(doneRounds)}
     `;
+}
+
+
+// ── STATS SHORTCUTS ───────────────────────────────────────
+function buildStatsShortcuts() {
+    const shortcuts = [
+        { id: 'stats-driver-section',      icon: 'bi-person',    label: 'DRIVER_STATS' },
+        { id: 'stats-constructor-section', icon: 'bi-car-front', label: 'CONSTRUCTOR_STATS' },
+        { id: 'stats-player-section',      icon: 'bi-people',    label: 'PLAYER_STATS' },
+    ];
+    return `
+        <div class="stats-shortcuts" id="stats-shortcuts">
+            ${shortcuts.map((s, i) => `
+                <button class="stats-shortcut-btn${i === 0 ? ' active' : ''}" id="sc-${s.id}" onclick="
+                    document.querySelectorAll('.stats-shortcut-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    const target = document.getElementById('${s.id}');
+                    const shortcuts = document.getElementById('stats-shortcuts');
+                    if (target && shortcuts) {
+                        const navH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--navbar-h')) || 36;
+                        const scH  = shortcuts.offsetHeight;
+                        const y    = target.getBoundingClientRect().top + window.scrollY - navH - scH;
+                        window.scrollTo({ top: y, behavior: 'smooth' });
+                    }
+                ">
+                    <i class="bi ${s.icon}"></i>
+                    <span>${s.label}</span>
+                </button>`).join('')}
+        </div>`;
 }
 
 // ── SEASON RECORDS ────────────────────────────────────────
@@ -243,6 +274,8 @@ function setStatsPlayerFilter(val) {
     const cSec = document.getElementById('stats-constructor-section');
     if (dSec) dSec.outerHTML = buildDriverStats(doneRounds);
     if (cSec) cSec.outerHTML = buildConstructorStats(doneRounds);
+    const pSec = document.getElementById('stats-player-section');
+    if (pSec) pSec.outerHTML = buildPlayerStats(doneRounds);
 }
 
 function getPlayerDriverCodes(playerCode) {
@@ -345,6 +378,115 @@ function buildConstructorStats(rounds) {
 
     return `<div id="stats-constructor-section">
         <div class="label mt-4 mb-2"><i class="bi bi-car-front me-2"></i>CONSTRUCTOR_STATS</div>
+        ${inner}
+    </div>`;
+}
+
+
+// ── PLAYER STATS ──────────────────────────────────────────
+function buildPlayerStats(rounds) {
+    const allPlayers   = league().players;
+
+    let players = allPlayers.map(p => {
+        let totalPts = 0, totalExp = 0, count = 0, bestP = -Infinity, worstP = Infinity, bestR = null, worstR = null;
+        rounds.forEach(r => {
+            const rd = p.rounds[r.id]; if (!rd) return;
+            const pts = rd.pts ?? 0;
+            totalPts += pts; totalExp += rd.exp ?? 0; count++;
+            if (isRoundComplete(r)) {
+                if (pts > bestP)  { bestP = pts;  bestR = r; }
+                if (pts < worstP) { worstP = pts; worstR = r; }
+            }
+        });
+        if (!count) return null;
+        const avgPts = totalPts / count;
+        const acc    = totalExp !== 0 ? Math.max(0, 100 - Math.abs(totalPts - totalExp) / Math.abs(totalExp) * 100) : 0;
+        return { code: p.code, name: p.name, totalPts, totalExp, avgPts, acc,
+                 bestP, worstP, bestR, worstR, wins: p.wins,
+                 budgetInit: p.budgetInit, budgetCurr: p.budgetCurr };
+    }).filter(Boolean).sort((a, b) => b.totalPts - a.totalPts);
+
+    if (statsPlayerFilter) players = players.filter(p => p.code === statsPlayerFilter);
+
+    const sc = (label, val, cls = '') =>
+        `<div class="sc"><div class="sl">${label}</div><div class="sv${cls ? ' '+cls : ''}">${val}</div></div>`;
+
+    const inner = players.length
+        ? `<div class="stat-table">${players.map((p, i) => {
+            const isTop = i === 0;
+            const ptsC  = isTop ? 'warn' : p.totalPts < 0 ? 'neg' : '';
+            const uid   = `tt-player-${p.code}`;
+            const gap   = p.totalPts - players[0].totalPts;
+
+            function roundTooltipCell(label, pts, round, ttId, cls) {
+                const roundInfo = round
+                    ? `<span class="xpt-tooltip-label">ROUND_${pad(round.n)}</span>
+                       <span style="display:flex;align-items:center;gap:.35rem;margin-top:3px">
+                           <img src="https://flagcdn.com/w40/${round.cc ?? 'un'}.png" width="20" height="13" style="border:1px solid var(--border)">
+                           <span style="font-size:.78rem;color:var(--text-main)">${round.name.toUpperCase()}</span>
+                       </span>`
+                    : `<span class="xpt-tooltip-label">—</span>`;
+                return `<div class="sc"><div class="sl">${label}</div>
+                    <div class="sv${cls ? ' '+cls : ''}" style="display:flex;align-items:center;gap:.3rem;">
+                        ${pts}
+                        <span class="xpt-tooltip-wrap" onclick="toggleXptTooltip('${ttId}')">
+                            <i class="bi bi-info-circle xpt-info-icon"></i>
+                            <span class="xpt-tooltip" id="${ttId}">${roundInfo}</span>
+                        </span>
+                    </div></div>`;
+            }
+
+            const accCell = `<div class="sc"><div class="sl">ACCURACY_XPT</div>
+                <div class="sv ${accClass(p.acc)}" style="display:flex;align-items:center;gap:.3rem;">
+                    ${p.acc.toFixed(0)}%
+                    <span class="xpt-tooltip-wrap" onclick="toggleXptTooltip('${uid}')">
+                        <i class="bi bi-info-circle xpt-info-icon"></i>
+                        <span class="xpt-tooltip" id="${uid}">
+                            <span class="xpt-tooltip-label">TOT_XPT</span>
+                            <span class="xpt-tooltip-val">${p.totalExp.toFixed(1)}</span>
+                        </span>
+                    </span>
+                </div></div>`;
+
+            return `
+                <div class="stat-card-row px-2 pb-2 pt-1 ${isTop ? 'stat-card-row--winner' : ''}">
+                    <div class="stat-top">
+                        <div class="stat-id">
+                            <div class="s-rank">${i + 1}</div>
+                            <div class="stat-name" style="min-width:0;overflow:hidden;">
+                                <span class="fw-bold" style="flex-shrink:0;">${p.code}</span>
+                                <span class="s-player-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.name}</span>
+                            </div>
+                        </div>
+                        <div class="stat-kpis">
+                            <div class="sc text-right">
+                                <div class="sl">TOT_PTS</div>
+                                <div class="sv fw-bold${ptsC ? ' '+ptsC : ''}">${p.totalPts}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-secondary">
+                        <div class="stat-sec-row">
+                            ${sc('AVG_PTS/RND', p.avgPts.toFixed(1), p.avgPts < 0 ? 'neg' : '')}
+                            ${sc('WINS', p.wins, p.wins === 0 ? 'muted' : 'warn')}
+                            ${sc('GAP', gap === 0 ? '<span class="pos gap-leader">LEADER</span>' : gap, gap < 0 ? 'neg' : 'muted')}                        </div>
+                        <div class="stat-sec-row">
+                            ${roundTooltipCell('HIGHEST_PTS', p.bestP, p.bestR, `${uid}-best`, p.bestP < 0 ? 'neg' : '')}
+                            ${roundTooltipCell('LOWEST_PTS',  p.worstP, p.worstR, `${uid}-worst`, p.worstP < 0 ? 'neg' : '')}
+                            ${accCell}
+                        </div>
+                        <div class="stat-sec-row">
+                            ${sc('INIT_BUDGET', p.budgetInit.toFixed(1)+'M')}
+                            ${sc('CURR_BUDGET', p.budgetCurr.toFixed(1)+'M')}
+                            ${sc('DIFF_BUDGET', diffHtml(p.budgetCurr - p.budgetInit, false))}
+                        </div>
+                    </div>
+                </div>`;
+          }).join('')}</div>`
+        : `<div class="stat-table b"><div class="stats-empty label">NO_DATA FOR SELECTED PLAYER</div></div>`;
+
+    return `<div id="stats-player-section">
+        <div class="label mt-4 mb-2"><i class="bi bi-people me-2"></i>PLAYER_STATS</div>
         ${inner}
     </div>`;
 }

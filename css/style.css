@@ -51,7 +51,6 @@ body { background:var(--bg-base); color:var(--text-main); padding-bottom:0; font
 }
 /* ── CARD WINNER — bordo animato clockwise ── */
 .card-db--winner {
-    border: none;
     position: relative;
     background: var(--bg-surface);
 }
