@@ -38,9 +38,20 @@ function isRoundComplete(r) {
     return rd && rd.updated_to === 'r';
 }
 
+// Sessions that are "pre-race": data loaded up to these does NOT make
+// a round partial. Partial = race has physically happened but points
+// are not yet final (e.g. status is 'provisional').
+const PRE_RACE_SESSIONS = new Set(['fp1', 'fp2', 'fp3', 'sq', 'sr', 'q']);
+
 function isRoundPartial(r) {
     const rd = RESULTS[r.id];
-    return rd && rd.updated_to && rd.updated_to !== 'r';
+    if (!rd || !rd.updated_to || rd.updated_to === 'r') return false;
+    // If the most recent session scored is still pre-race, this round
+    // is NOT partial — the race simply hasn't happened yet.
+    if (PRE_RACE_SESSIONS.has(rd.updated_to)) return false;
+    // Any other value of updated_to (besides 'r') = race done but
+    // points provisional → partial.
+    return true;
 }
 
 function getRoundStatus(r) {

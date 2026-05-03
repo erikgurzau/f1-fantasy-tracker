@@ -4,6 +4,7 @@
 let statsPlayerFilter = '';   // player code, '' = all
 
 function renderStats() {
+
     const wrap = document.getElementById('stats-wrap');
     if (!wrap) return;
     const players    = league().players;
@@ -26,9 +27,9 @@ function renderStats() {
 // ── STATS SHORTCUTS ───────────────────────────────────────
 function buildStatsShortcuts() {
     const shortcuts = [
-        { id: 'stats-driver-section',      icon: 'bi-person',    label: 'DRIVER_STATS' },
-        { id: 'stats-constructor-section', icon: 'bi-car-front', label: 'CONSTRUCTOR_STATS' },
-        { id: 'stats-player-section',      icon: 'bi-people',    label: 'PLAYER_STATS' },
+        { id: 'stats-driver-section',      icon: './assets/icons/helmet-icon.png',      label: 'DRIVERS' },
+        { id: 'stats-constructor-section', icon: './assets/icons/constructor-icon.png', label: 'CONSTRUCTORS', iconClass: 'stats-icon--constructor' },
+        { id: 'stats-player-section',      icon: 'bi-people',                           label: 'PLAYERS' },
     ];
     return `
         <div class="stats-shortcuts" id="stats-shortcuts">
@@ -45,7 +46,7 @@ function buildStatsShortcuts() {
                         window.scrollTo({ top: y, behavior: 'smooth' });
                     }
                 ">
-                    <i class="bi ${s.icon}"></i>
+                    ${s.icon.startsWith('bi-') ? `<i class="bi ${s.icon}"></i>` : `<span class="stats-shortcut-icon${s.iconClass ? ' ' + s.iconClass : ''}" style="mask-image:url(${s.icon});-webkit-mask-image:url(${s.icon})"></span>`}
                     <span>${s.label}</span>
                 </button>`).join('')}
         </div>`;
@@ -332,7 +333,7 @@ function buildDriverStats(rounds) {
         : `<div class="stat-table b"><div class="stats-empty label">NO_DATA FOR SELECTED PLAYER</div></div>`;
 
     return `<div id="stats-driver-section">
-        <div class="label mb-2"><i class="bi bi-person me-2"></i>DRIVER_STATS</div>
+        <div class="label mb-2"><span class="stats-section-icon" style="mask-image:url(./assets/icons/helmet-icon.png);-webkit-mask-image:url(./assets/icons/helmet-icon.png)"></span>DRIVERS</div>
         ${inner}
     </div>`;
 }
@@ -377,7 +378,7 @@ function buildConstructorStats(rounds) {
         : `<div class="stat-table b"><div class="stats-empty label">NO_DATA FOR SELECTED PLAYER</div></div>`;
 
     return `<div id="stats-constructor-section">
-        <div class="label mt-4 mb-2"><i class="bi bi-car-front me-2"></i>CONSTRUCTOR_STATS</div>
+        <div class="label mt-4 mb-2"><span class="stats-section-icon stats-icon--constructor" style="mask-image:url(./assets/icons/constructor-icon.png);-webkit-mask-image:url(./assets/icons/constructor-icon.png)"></span>CONSTRUCTORS</div>
         ${inner}
     </div>`;
 }
@@ -490,7 +491,7 @@ function buildPlayerStats(rounds) {
         : `<div class="stat-table b"><div class="stats-empty label">NO_DATA FOR SELECTED PLAYER</div></div>`;
 
     return `<div id="stats-player-section">
-        <div class="label mt-4 mb-2"><i class="bi bi-people me-2"></i>PLAYER_STATS</div>
+        <div class="label mt-4 mb-2"><i class="bi bi-people me-2"></i>PLAYERS</div>
         ${inner}
     </div>`;
 }

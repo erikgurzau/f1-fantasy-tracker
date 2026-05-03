@@ -176,3 +176,22 @@
     .stats-shortcut-btn:not(.active) span { display: none; }
     .stats-shortcut-btn:not(.active) { padding: .45rem .65rem; flex: 0; }
 }
+/* ── STATS CUSTOM ICONS (mask-based, follows currentColor) ── */
+.stats-shortcut-icon,
+.stats-section-icon {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    background-color: currentColor;
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    mask-position: center;
+    -webkit-mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    vertical-align: middle;
+    flex-shrink: 0;
+}
+.stats-shortcut-icon { margin-right: 0; }  /* gap handled by parent flex gap */
+.stats-section-icon  { margin-right: 6px; width: 13px; height: 13px; }
+.stats-icon--constructor { width: 20px; height: 20px; }

@@ -59,7 +59,14 @@ function renderUpdatedStatus(now) {
         targetRound = currentRound;
     } else if (currentRoundScoringStarted(currentRound)) {
         targetRound = currentRound;
-        notUpdated  = true;
+        // Only flag as not-updated if there is no data at all, or if the
+        // data doesn't cover the last started scoring session yet.
+        const rdCur      = RESULTS[currentRound.id];
+        const calSessCur = lastStartedScoringSession(currentRound) ?? { key: firstScoringSession(currentRound) };
+        const orderCur   = sessionOrder(currentRound.fmt);
+        const calIdxCur  = orderCur.indexOf(calSessCur.key);
+        const updIdxCur  = rdCur?.updated_to ? orderCur.indexOf(rdCur.updated_to) : -1;
+        notUpdated = !rdCur || updIdxCur < calIdxCur;
     } else {
         const prevWithData = (() => {
             let r = null;
@@ -114,7 +121,7 @@ function renderUpdatedStatus(now) {
 
     // Build terminal lines — output inline with command, all wrapped in a bg box
     const sessionTarget = updatedToLabel ?? sessionLabel;
-    const cmdLabel2     = updatedToLabel ? './f1ft --updated_to' : './f1ft --pending_session';
+    const cmdLabel2     = updatedToLabel ? './f1ft --updated_to' : './f1ft --pending';
 
     let html = `<div class="term-block">`;
 
@@ -141,9 +148,16 @@ function renderBanner() {
     const current = currentRound ? currentRound.n : REG.rounds.filter(r => isRoundComplete(r) || isRoundPartial(r)).length;
     const pct     = Math.round(current / total * 100);
     const lastWithData = (() => {
+        // Only rounds where the race has actually taken place count as
+        // LAST_ROUND. A round with only pre-race session data (q, sq…)
+        // loaded in advance is excluded — the race hasn't happened yet.
+        const PRE_RACE = new Set(['fp1', 'fp2', 'fp3', 'sq', 'sr', 'q']);
         let r = null;
         for (const round of REG.rounds) {
-            if (RESULTS[round.id]) r = round;
+            const rd = RESULTS[round.id];
+            if (!rd) continue;
+            if (rd.updated_to && PRE_RACE.has(rd.updated_to)) continue;
+            r = round;
         }
         return r;
     })();
