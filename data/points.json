@@ -127,7 +127,7 @@
   "miami": {
     "last_update": "2026-05-03T09:29:26.503390Z",
     "updated_to": "q",
-    "status": "updated",
+    "status": "provisional",
     "drivers": {
       "ALB": {"pts":4,"exp":-2,"price":10.2},
       "ALO": {"pts":10,"exp":-7.1,"price":8.2},
