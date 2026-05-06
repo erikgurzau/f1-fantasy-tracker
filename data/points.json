@@ -1,7 +1,7 @@
 {
   "australia": {
     "updated_to": "r",
-    "status": "completed",
+    "status": "updated",
     "drivers": {
       "ALB":{"pts":8,"exp":2}, 
       "ALO":{"pts":-14,"exp":-4.8}, 
@@ -127,7 +127,7 @@
   "miami": {
     "last_update": "2026-05-06T04:03:00.000000Z",
     "updated_to": "r",
-    "status": "completed",
+    "status": "updated",
     "drivers": {
       "ALB": {"pts":20,"exp":-2,"price":10.2},
       "ALO": {"pts":20,"exp":-7.1,"price":8.2},
