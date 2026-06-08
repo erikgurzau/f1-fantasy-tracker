@@ -208,9 +208,8 @@
     }
   },
   "monaco": {
-    "last_update": "2026-06-06T18:36:10.801914Z",
     "updated_to": "r",
-    "status": "provisional",
+    "status": "updated",
     "drivers": {
       "ALB": {"pts":9,"exp":-2.3,"price":9},
       "ALO": {"pts":15,"exp":-2.6,"price":7.4},
