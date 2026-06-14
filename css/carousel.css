@@ -1,7 +1,7 @@
 /* ── CAROUSEL ────────────────────────────────────────────── */
 .carousel-wrap { margin-bottom:.5rem; }
 .carousel {
-    display:flex; gap:.5rem;
+    display:flex; gap:.65rem;
     overflow-x:auto; scroll-snap-type:x mandatory;
     scrollbar-width:none; padding:2px 4px 6px;
     -webkit-overflow-scrolling:touch;
