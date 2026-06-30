@@ -291,7 +291,7 @@
   },
   "austria": {
     "updated_to": "r",
-    "status": "provisional",
+    "status": "updated",
     "drivers": {
       "ALB": {"pts":7,"exp":-2,"price":8.2},
       "ALO": {"pts":7,"exp":-6.3,"price":6.2},
