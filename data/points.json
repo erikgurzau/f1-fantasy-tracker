@@ -332,7 +332,7 @@
   },
   "great-britain": {
     "updated_to": "r",
-    "status": "provisional",
+    "status": "updated",
     "drivers": {
       "ALB": {"pts":-13,"exp":-5.1,"price":7.6},
       "ALO": {"pts":8,"exp":-7.7,"price":5.6},
