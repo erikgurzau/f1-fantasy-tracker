@@ -444,11 +444,11 @@
       "AST": {"pts":1,"exp":-3.3,"price":5.1},
       "AUD": {"pts":6,"exp":15.7,"price":6.2},
       "CAD": {"pts":-1,"exp":-6.6,"price":3.6},
-      "FER": {"pts":27,"exp":67,"price":26.3},
+      "FER": {"pts":25,"exp":67,"price":26.3},
       "HAA": {"pts":1,"exp":7.4,"price":11.4},
-      "MCL": {"pts":26,"exp":55.7,"price":30.7},
-      "MER": {"pts":21,"exp":73.9,"price":32.3},
-      "RED": {"pts":18,"exp":46.1,"price":30.6},
+      "MCL": {"pts":28,"exp":55.7,"price":30.7},
+      "MER": {"pts":19,"exp":73.9,"price":32.3},
+      "RED": {"pts":20,"exp":46.1,"price":30.6},
       "VRB": {"pts":7,"exp":24.7,"price":12.3},
       "WIL": {"pts":-1,"exp":7.5,"price":13.2}
     }
