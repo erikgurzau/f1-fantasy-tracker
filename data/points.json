@@ -411,5 +411,46 @@
       "VRB": {"pts":15,"exp":24.5,"price":12.3},
       "WIL": {"pts":19,"exp":11.6,"price":13.2}
     }
+  },
+  "hungary": {
+    "updated_to": "q",
+    "status": "provisional",
+    "drivers": {
+      "ALB": {"pts":0,"exp":0.3,"price":6.4},
+      "ALO": {"pts":0,"exp":-3.5,"price":5.6},
+      "ANT": {"pts":7,"exp":34,"price":25.6},
+      "BEA": {"pts":0,"exp":0.6,"price":7.4},
+      "BOR": {"pts":0,"exp":2.1,"price":7.2},
+      "BOT": {"pts":0,"exp":-3.9,"price":3},
+      "COL": {"pts":0,"exp":1.7,"price":11},
+      "GAS": {"pts":0,"exp":2.9,"price":12.8},
+      "HAD": {"pts":3,"exp":9.5,"price":13.9},
+      "HAM": {"pts":9,"exp":23.2,"price":24.9},
+      "HUL": {"pts":1,"exp":1.3,"price":3},
+      "LAW": {"pts":0,"exp":5.8,"price":9.7},
+      "LEC": {"pts":8,"exp":27.8,"price":23.6},
+      "LIN": {"pts":2,"exp":3.7,"price":7.4},
+      "NOR": {"pts":10,"exp":18.4,"price":25.8},
+      "OCO": {"pts":0,"exp":0.9,"price":10.5},
+      "PER": {"pts":0,"exp":-3.7,"price":4.4},
+      "PIA": {"pts":6,"exp":17.9,"price":24.7},
+      "RUS": {"pts":4,"exp":25.4,"price":28},
+      "SAI": {"pts":0,"exp":0.7,"price":10.2},
+      "STR": {"pts":0,"exp":-4.3,"price":3},
+      "VER": {"pts":5,"exp":18.4,"price":27.7}
+    },
+    "constructors": {
+      "ALP": {"pts":3,"exp":13.5,"price":18.5},
+      "AST": {"pts":1,"exp":-3.3,"price":5.1},
+      "AUD": {"pts":6,"exp":15.7,"price":6.2},
+      "CAD": {"pts":-1,"exp":-6.6,"price":3.6},
+      "FER": {"pts":27,"exp":67,"price":26.3},
+      "HAA": {"pts":1,"exp":7.4,"price":11.4},
+      "MCL": {"pts":26,"exp":55.7,"price":30.7},
+      "MER": {"pts":21,"exp":73.9,"price":32.3},
+      "RED": {"pts":18,"exp":46.1,"price":30.6},
+      "VRB": {"pts":7,"exp":24.7,"price":12.3},
+      "WIL": {"pts":-1,"exp":7.5,"price":13.2}
+    }
   }
 } 
