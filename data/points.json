@@ -414,7 +414,7 @@
   },
   "hungary": {
     "updated_to": "q",
-    "status": "uodated",
+    "status": "updated",
     "drivers": {
       "ALB": {"pts":0,"exp":0.3,"price":6.4},
       "ALO": {"pts":0,"exp":-3.5,"price":5.6},
