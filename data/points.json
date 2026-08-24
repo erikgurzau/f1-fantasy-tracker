@@ -440,7 +440,7 @@
       "VER": {"pts":39,"exp":18.4,"price":27.7}
     },
     "constructors": {
-      "ALP": {"pts":17,"exp":13.5,"price":18.5},
+      "ALP": {"pts":17,"exsp":13.5,"price":18.5},
       "AST": {"pts":36,"exp":-3.3,"price":5.1},
       "AUD": {"pts":29,"exp":15.7,"price":6.2},
       "CAD": {"pts":-37,"exp":-6.6,"price":3.6},
@@ -451,6 +451,47 @@
       "RED": {"pts":59,"exp":46.1,"price":30.6},
       "VRB": {"pts":47,"exp":24.7,"price":12.3},
       "WIL": {"pts":10,"exp":7.5,"price":13.2}
+    }
+  },
+  "netherlands": {
+    "updated_to": "r",
+    "status": "updated",
+    "drivers": {
+      "ALB": {"pts":2,"exp":0.1,"price":5.2},
+      "ALO": {"pts":24,"exp":-2.7,"price":6.8},
+      "ANT": {"pts":37,"exp":31.3,"price":26},
+      "BEA": {"pts":-13,"exp":1.2,"price":7},
+      "BOR": {"pts":5,"exp":1.9,"price":8},
+      "BOT": {"pts":-18,"exp":-5.4,"price":3},
+      "COL": {"pts":6,"exp":-1.7,"price":10.6},
+      "GAS": {"pts":8,"exp":-0.3,"price":12.4},
+      "HAM": {"pts":23,"exp":36.1,"price":25.1},
+      "HUL": {"pts":5,"exp":1,"price":3.6},
+      "LAW": {"pts":12,"exp":8.9,"price":14.3},
+      "LEC": {"pts":39,"exp":37.9,"price":24.2},
+      "LIN": {"pts":7,"exp":-0.9,"price":7.8},
+      "NOR": {"pts":57,"exp":23.6,"price":26.4},
+      "OCO": {"pts":-10,"exp":1.3,"price":10.1},
+      "PER": {"pts":8,"exp":-0.2,"price":3.2},
+      "PIA": {"pts":21,"exp":22.2,"price":24.1},
+      "RUS": {"pts":32,"exp":17.9,"price":27.6},
+      "SAI": {"pts":7,"exp":-0.5,"price":9.8},
+      "STR": {"pts":-10,"exp":0.7,"price":3},
+      "TSU": {"pts":5,"exp":-0.7,"price":9.7},
+      "VER": {"pts":-13,"exp":24.5,"price":27.5}
+    },
+    "constructors": {
+      "ALP": {"pts":19,"exp":6,"price":18.9},
+      "AST": {"pts":18,"exp":3.2,"price":6.3},
+      "AUD": {"pts":25,"exp":16.9,"price":7.4},
+      "CAD": {"pts":-9,"exp":-4.5,"price":3},
+      "FER": {"pts":74,"exp":88.9,"price":26.9},
+      "HAA": {"pts":-20,"exp":8.4,"price":11.4},
+      "MCL": {"pts":80,"exp":65.3,"price":31.3},
+      "MER": {"pts":84,"exp":66.8,"price":32.9},
+      "RED": {"pts":11,"exp":49.8,"price":31.2},
+      "VRB": {"pts":22,"exp":13.2,"price":13.3},
+      "WIL": {"pts":15,"exp":4.5,"price":13.2}
     }
   }
 } 
