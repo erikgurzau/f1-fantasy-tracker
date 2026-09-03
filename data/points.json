@@ -465,9 +465,10 @@
       "BOT": {"pts":-18,"exp":-5.4,"price":3},
       "COL": {"pts":6,"exp":-1.7,"price":10.6},
       "GAS": {"pts":8,"exp":-0.3,"price":12.4},
+      "HAD": {"pts":-35,"exp":0,"price":13.9},
       "HAM": {"pts":23,"exp":36.1,"price":25.1},
       "HUL": {"pts":5,"exp":1,"price":3.6},
-      "LAW": {"pts":12,"exp":8.9,"price":14.3},
+      "LAW": {"pts":-35,"exp":8.9,"price":14.3},
       "LEC": {"pts":39,"exp":37.9,"price":24.2},
       "LIN": {"pts":7,"exp":-0.9,"price":7.8},
       "NOR": {"pts":57,"exp":23.6,"price":26.4},
@@ -477,7 +478,6 @@
       "RUS": {"pts":32,"exp":17.9,"price":27.6},
       "SAI": {"pts":7,"exp":-0.5,"price":9.8},
       "STR": {"pts":-10,"exp":0.7,"price":3},
-      "TSU": {"pts":5,"exp":-0.7,"price":9.7},
       "VER": {"pts":-13,"exp":24.5,"price":27.5}
     },
     "constructors": {
