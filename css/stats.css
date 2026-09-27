@@ -145,6 +145,31 @@
 .xpt-tooltip-label { font-size: .70rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; }
 .xpt-tooltip-val   { font-size: .92rem; font-weight: 700; color: var(--text-main); }
 
+/* ── PLAYER ROUND BREAKDOWN ACCORDION ────────────────────── */
+.player-round-toggle {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:.5rem .55rem; cursor:pointer;
+    border-top:1px solid rgba(255,255,255,.05);
+    background:rgba(0,0,0,.15);
+    transition:background .15s;
+}
+.player-round-toggle:hover { background:rgba(0,0,0,.25); }
+.player-round-toggle .label { margin-bottom:0; }
+
+.standings-detail.player-round-detail { padding:.4rem 0; border-top:none; }
+.player-round-row {
+    display:flex; align-items:center; justify-content:space-between;
+    gap:.5rem; padding:.35rem .85rem; font-size:.82rem;
+    border-bottom:1px solid rgba(255,255,255,.04);
+}
+.player-round-row:last-child { border-bottom:none; }
+.player-round-info  { display:flex; align-items:center; gap:.5rem; min-width:0; flex:1; overflow:hidden; }
+.player-round-flag  { width:18px; height:12px; object-fit:cover; border:1px solid var(--border); flex-shrink:0; }
+.player-round-label { font-weight:700; color:var(--text-muted); flex-shrink:0; }
+.player-round-name  { flex-shrink:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.player-round-date  { font-size:.7rem; color:var(--text-muted); flex-shrink:0; }
+.player-round-pts   { flex-shrink:0; }
+
 /* ── STATS SHORTCUTS ─────────────────────────────────────── */
 .stats-shortcuts {
     position: sticky;

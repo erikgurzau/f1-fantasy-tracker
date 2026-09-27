@@ -300,6 +300,7 @@ function buildDriverStats(rounds) {
 
     let drivers = Object.entries(REG.drivers).map(([code, info]) => {
         let totalPts = 0, totalExp = 0, count = 0, bestP = -Infinity, worstP = Infinity, bestR = null, worstR = null;
+        const roundBreakdown = [];
         rounds.forEach(r => {
             const d = RESULTS[r.id]?.drivers?.[code]; if (!d) return;
             const p = d.pts ?? 0;
@@ -307,6 +308,7 @@ function buildDriverStats(rounds) {
             if (isRoundComplete(r)) {
                 if (p > bestP)  { bestP = p;  bestR = r; }
                 if (p < worstP) { worstP = p; worstR = r; }
+                roundBreakdown.push({ r, pts: p });
             }
         });
         if (!count) return null;
@@ -319,7 +321,7 @@ function buildDriverStats(rounds) {
         ).length;
         return { code, name: info.name, con: info.constructor.toLowerCase(),
             totalPts, totalExp, initP, currP, priceDiff: currP - initP,
-            avgPts, ptsPerM: currP > 0 ? totalPts / currP : 0, acc, bestP, worstP, bestR, worstR, selCount, totalPlayers };
+            avgPts, ptsPerM: currP > 0 ? totalPts / currP : 0, acc, bestP, worstP, bestR, worstR, selCount, totalPlayers, roundBreakdown };
     }).filter(Boolean).sort((a, b) => b.totalPts - a.totalPts);
 
     const allowedCodes = getPlayerDriverCodes(statsPlayerFilter);
@@ -328,7 +330,8 @@ function buildDriverStats(rounds) {
     const inner = drivers.length
         ? `<div class="stat-table">${drivers.map((d, i) => buildStatCardRow(
             i+1, `var(--${d.con})`, d.code, d.name, d.totalPts, d.avgPts, d.ptsPerM, d.priceDiff,
-            d.acc, d.totalExp, d.bestP, d.worstP, d.bestR, d.worstR, i===0, d.initP, d.currP, d.selCount, d.totalPlayers
+            d.acc, d.totalExp, d.bestP, d.worstP, d.bestR, d.worstR, i===0, d.initP, d.currP, d.selCount, d.totalPlayers,
+            buildRoundAccordion('drv', d.code, d.roundBreakdown)
           )).join('')}</div>`
         : `<div class="stat-table b"><div class="stats-empty label">NO_DATA FOR SELECTED PLAYER</div></div>`;
 
@@ -349,6 +352,7 @@ function buildConstructorStats(rounds) {
 
     let constructors = Object.entries(REG.constructors).map(([code, info]) => {
         let totalPts = 0, totalExp = 0, count = 0, bestP = -Infinity, worstP = Infinity, bestR = null, worstR = null;
+        const roundBreakdown = [];
         rounds.forEach(r => {
             const c = RESULTS[r.id]?.constructors?.[code]; if (!c) return;
             const p = c.pts ?? 0;
@@ -356,6 +360,7 @@ function buildConstructorStats(rounds) {
             if (isRoundComplete(r)) {
                 if (p > bestP)  { bestP = p;  bestR = r; }
                 if (p < worstP) { worstP = p; worstR = r; }
+                roundBreakdown.push({ r, pts: p });
             }
         });
         if (!count) return null;
@@ -364,7 +369,7 @@ function buildConstructorStats(rounds) {
         const acc    = totalExp !== 0 ? Math.max(0, 100 - Math.abs(totalPts - totalExp) / Math.abs(totalExp) * 100) : 0;
         const selCount = conPicks[code] ?? 0;
         return { code, name: info.name, totalPts, totalExp, initP, currP, priceDiff: currP - initP,
-            avgPts, ptsPerM: currP > 0 ? totalPts / currP : 0, acc, bestP, worstP, bestR, worstR, selCount };
+            avgPts, ptsPerM: currP > 0 ? totalPts / currP : 0, acc, bestP, worstP, bestR, worstR, selCount, roundBreakdown };
     }).filter(Boolean).sort((a, b) => b.totalPts - a.totalPts);
 
     const allowedCodes = getPlayerConstructorCodes(statsPlayerFilter);
@@ -373,7 +378,8 @@ function buildConstructorStats(rounds) {
     const inner = constructors.length
         ? `<div class="stat-table">${constructors.map((c, i) => buildStatCardRow(
             i+1, `var(--${c.code.toLowerCase()})`, c.code, c.name, c.totalPts, c.avgPts, c.ptsPerM, c.priceDiff,
-            c.acc, c.totalExp, c.bestP, c.worstP, c.bestR, c.worstR, i===0, c.initP, c.currP, c.selCount, totalPlayers2
+            c.acc, c.totalExp, c.bestP, c.worstP, c.bestR, c.worstR, i===0, c.initP, c.currP, c.selCount, totalPlayers2,
+            buildRoundAccordion('con', c.code, c.roundBreakdown)
           )).join('')}</div>`
         : `<div class="stat-table b"><div class="stats-empty label">NO_DATA FOR SELECTED PLAYER</div></div>`;
 
@@ -390,6 +396,7 @@ function buildPlayerStats(rounds) {
 
     let players = allPlayers.map(p => {
         let totalPts = 0, totalExp = 0, count = 0, bestP = -Infinity, worstP = Infinity, bestR = null, worstR = null;
+        const roundBreakdown = [];
         rounds.forEach(r => {
             const rd = p.rounds[r.id]; if (!rd) return;
             const pts = rd.pts ?? 0;
@@ -397,6 +404,7 @@ function buildPlayerStats(rounds) {
             if (isRoundComplete(r)) {
                 if (pts > bestP)  { bestP = pts;  bestR = r; }
                 if (pts < worstP) { worstP = pts; worstR = r; }
+                roundBreakdown.push({ r, pts });
             }
         });
         if (!count) return null;
@@ -404,7 +412,7 @@ function buildPlayerStats(rounds) {
         const acc    = totalExp !== 0 ? Math.max(0, 100 - Math.abs(totalPts - totalExp) / Math.abs(totalExp) * 100) : 0;
         return { code: p.code, name: p.name, totalPts, totalExp, avgPts, acc,
                  bestP, worstP, bestR, worstR, wins: p.wins,
-                 budgetInit: p.budgetInit, budgetCurr: p.budgetCurr };
+                 budgetInit: p.budgetInit, budgetCurr: p.budgetCurr, roundBreakdown };
     }).filter(Boolean).sort((a, b) => b.totalPts - a.totalPts);
 
     if (statsPlayerFilter) players = players.filter(p => p.code === statsPlayerFilter);
@@ -486,6 +494,7 @@ function buildPlayerStats(rounds) {
                             ${sc('DIFF_BUDGET', diffHtml(p.budgetCurr - p.budgetInit, false))}
                         </div>
                     </div>
+                    ${buildRoundAccordion('pr', p.code, p.roundBreakdown)}
                 </div>`;
           }).join('')}</div>`
         : `<div class="stat-table b"><div class="stats-empty label">NO_DATA FOR SELECTED PLAYER</div></div>`;
@@ -496,8 +505,38 @@ function buildPlayerStats(rounds) {
     </div>`;
 }
 
+// ── ROUND BREAKDOWN ACCORDION (players & drivers) ─────────
+function buildRoundAccordion(idPrefix, code, roundBreakdown) {
+    if (!roundBreakdown || !roundBreakdown.length) return '';
+    const accId = `${idPrefix}-acc-${code}`;
+    const maxPts = Math.max(...roundBreakdown.map(x => x.pts));
+    const rows = roundBreakdown.map(({ r, pts }) => {
+        const isBest = pts === maxPts;
+        const cls = isBest ? 'warn' : pts < 0 ? 'neg' : '';
+        return `
+        <div class="player-round-row">
+            <div class="player-round-info">
+                ${flagImg(r.cc, r.name, 'player-round-flag')}
+                <span class="player-round-label">R${pad(r.n)}</span>
+                <span class="player-round-name">${r.name.toUpperCase()}</span>
+                <span class="player-round-date">${(r.date ?? '').toUpperCase()}</span>
+            </div>
+            <div class="player-round-pts fw-bold${cls ? ' ' + cls : ''}">${pts}</div>
+        </div>`;
+    }).join('');
+
+    return `
+        <div class="player-round-toggle" onclick="toggleDetail('${accId}',this)">
+            <span class="label">ROUND_BREAKDOWN</span>
+            <i class="bi bi-chevron-down s-chevron ms-2"></i>
+        </div>
+        <div class="standings-detail player-round-detail" id="${accId}">
+            ${rows}
+        </div>`;
+}
+
 // ── SHARED ROW BUILDER ────────────────────────────────────
-function buildStatCardRow(rank, tagColor, code, name, totalPts, avgPts, ptsPerM, priceDiff, acc, totalExp, bestP, worstP, bestR, worstR, isTop, initP, currP, selCount = null, totalPlayers = null) {
+function buildStatCardRow(rank, tagColor, code, name, totalPts, avgPts, ptsPerM, priceDiff, acc, totalExp, bestP, worstP, bestR, worstR, isTop, initP, currP, selCount = null, totalPlayers = null, roundHtml = '') {
     const ptsC = isTop ? 'warn' : totalPts < 0 ? 'neg' : '';
     const sc   = (label, val, cls = '') =>
         `<div class="sc"><div class="sl">${label}</div><div class="sv${cls ? ' '+cls : ''}">${val}</div></div>`;
@@ -574,6 +613,7 @@ function buildStatCardRow(rank, tagColor, code, name, totalPts, avgPts, ptsPerM,
                     ${sc('DIFF_PRICE', diffHtml(priceDiff, false))}
                 </div>
             </div>
+            ${roundHtml}
         </div>`;
 }
 function toggleXptTooltip(id) {
