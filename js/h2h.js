@@ -5,6 +5,7 @@ let h2hPlayerA = null;
 let h2hPlayerB = null;
 let h2hZoomCum = 'fit'; // 'fit' | '1x' | '2x' | 'max'
 let h2hZoomGap = 'fit';
+let h2hZoomPos = 'fit';
 
 function renderH2H() {
     const wrap = document.getElementById('h2h-wrap');
@@ -95,8 +96,9 @@ function setH2HPlayer(slot, code) {
 }
 
 function setH2HZoom(chart, level) {
-    if (chart === 'cum') h2hZoomCum = level;
-    else                 h2hZoomGap = level;
+    if (chart === 'cum')      h2hZoomCum = level;
+    else if (chart === 'pos') h2hZoomPos = level;
+    else                      h2hZoomGap = level;
     // Re-render only the content section, not the whole selector
     const pA = league().players.find(p => p.code === h2hPlayerA);
     const pB = league().players.find(p => p.code === h2hPlayerB);
@@ -130,6 +132,7 @@ function buildH2HContent(pA, pB, rounds) {
         ${buildH2HScoreboard(pA, pB, winsA, winsB, draws, COL_A, COL_B)}
         ${buildH2HCumulativeChart(pA, pB, rounds, COL_A, COL_B)}
         ${buildH2HGapChart(pA, pB, rounds, COL_A, COL_B)}
+        ${buildH2HPositionChart(pA, pB, rounds, COL_A, COL_B)}
         ${buildH2HRoundTable(pA, pB, rounds, COL_A, COL_B)}
     `;
 }
@@ -287,6 +290,116 @@ function buildH2HGapChart(pA, pB, rounds, colA, colB) {
                 ${zeroLine}${bars}${xLabels}
             </svg>
         </div>`;
+}
+
+// ── Standing position per round (rank across ALL players) ──
+function computeRoundRanks(rounds) {
+    const allPlayers = league().players;
+    const cum = {};
+    allPlayers.forEach(p => { cum[p.code] = 0; });
+    const ranksByCode = {};
+    allPlayers.forEach(p => { ranksByCode[p.code] = []; });
+
+    rounds.forEach(r => {
+        allPlayers.forEach(p => { cum[p.code] += p.rounds[r.id]?.pts ?? 0; });
+        const sorted = [...allPlayers].sort((a, b) => cum[b.code] - cum[a.code]);
+        sorted.forEach((p, i) => { ranksByCode[p.code].push({ r, rank: i + 1 }); });
+    });
+
+    return ranksByCode;
+}
+
+function buildH2HPositionChart(pA, pB, rounds, colA, colB) {
+    if (!rounds.length) return '';
+    const totalPlayers = league().players.length;
+    const ranks   = computeRoundRanks(rounds);
+    const seriesA = ranks[pA.code].map(x => x.rank);
+    const seriesB = ranks[pB.code].map(x => x.rank);
+
+    const n = rounds.length;
+    const STEP = { 'fit': null, '1x': 20, '2x': 38, 'max': 60 };
+    const step = STEP[h2hZoomPos];
+    const W    = step ? Math.max(480, (n - 1) * step + 100) : 480;
+    const H    = 240;
+    const scrollable = step !== null;
+
+    const minV = 1, maxV = Math.max(totalPlayers, 2);
+    const rng  = maxV - minV || 1;
+    const maxLabelLen = String(maxV).length + 1; // "P" + digits
+    const PAD  = { t: 20, r: maxLabelLen * 7, b: 52, l: maxLabelLen * 7 + 15 };
+    const chartW = W - PAD.l - PAD.r;
+    const chartH = H - PAD.t - PAD.b;
+
+    const xS = i => PAD.l + (i / Math.max(n - 1, 1)) * chartW;
+    // inverted axis: position 1 (best) sits at the top
+    const yS = v => PAD.t + ((v - minV) / rng) * chartH;
+
+    const pathA = seriesA.map((v, i) => `${i===0?'M':'L'}${xS(i).toFixed(1)},${yS(v).toFixed(1)}`).join(' ');
+    const pathB = seriesB.map((v, i) => `${i===0?'M':'L'}${xS(i).toFixed(1)},${yS(v).toFixed(1)}`).join(' ');
+    const dotsA = seriesA.map((v, i) => `<circle cx="${xS(i).toFixed(1)}" cy="${yS(v).toFixed(1)}" r="3" fill="${colA}"/>`).join('');
+    const dotsB = seriesB.map((v, i) => `<circle cx="${xS(i).toFixed(1)}" cy="${yS(v).toFixed(1)}" r="3" fill="${colB}"/>`).join('');
+
+    const xLabels = rounds.map((r, i) => {
+        const x = xS(i);
+        const cc = r.cc ?? 'un';
+        return `<image href="https://flagcdn.com/w40/${cc}.png" x="${(x - 6.5).toFixed(1)}" y="${H - PAD.b + 20}" width="13" height="9"/>
+                <text x="${x.toFixed(1)}" y="${H - 10}" fill="var(--text-main)" font-size="8" text-anchor="middle">R${pad(r.n)}</text>`;
+    }).join('');
+
+    // integer position ticks, capped so labels don't overlap on large leagues
+    const tickStep = totalPlayers > 8 ? Math.ceil(totalPlayers / 8) : 1;
+    const tickVals = [];
+    for (let v = 1; v <= totalPlayers; v += tickStep) tickVals.push(v);
+    if (tickVals[tickVals.length - 1] !== totalPlayers) tickVals.push(totalPlayers);
+
+    const grid = tickVals.map(v => {
+        const y = yS(v);
+        return `<line x1="${PAD.l}" y1="${y.toFixed(1)}" x2="${PAD.l+chartW}" y2="${y.toFixed(1)}" stroke="var(--border)" stroke-width="1"/>
+                 <text x="${PAD.l-6}" y="${(y+3).toFixed(1)}" fill="var(--text-muted)" font-size="9" text-anchor="end">P${v}</text>`;
+    }).join('');
+
+    const zoomBtns = ['fit','1x','2x','max'].map(z =>
+        `<button onclick="setH2HZoom('pos','${z}')" class="h2h-zoom-btn${h2hZoomPos===z?' h2h-zoom-btn--active':''}">${z.toUpperCase()}</button>`
+    ).join('');
+
+    const avg = arr => arr.reduce((s, v) => s + v, 0) / arr.length;
+    const avgA = avg(seriesA), avgB = avg(seriesB);
+    const bestA = Math.min(...seriesA), worstA = Math.max(...seriesA);
+    const bestB = Math.min(...seriesB), worstB = Math.max(...seriesB);
+    const cols  = 'grid-template-columns:1fr 84px 84px 84px;';
+
+    const miniTable = `
+        <div class="stats-card p-0 mt-2">
+            <div class="h2h-round-row h2h-round-hd" style="${cols}">
+                <div>PLAYER</div><div class="text-right">AVG_POS</div><div class="text-right">BEST</div><div class="text-right">WORST</div>
+            </div>
+            <div class="h2h-round-row" style="${cols}">
+                <div class="fw-bold" style="color:${colA}">${pA.code}</div>
+                <div class="text-right fw-bold" style="color:${avgA <= avgB ? colA : 'var(--text-muted)'}">${avgA.toFixed(2)}</div>
+                <div class="text-right">P${bestA}</div>
+                <div class="text-right">P${worstA}</div>
+            </div>
+            <div class="h2h-round-row" style="${cols}">
+                <div class="fw-bold" style="color:${colB}">${pB.code}</div>
+                <div class="text-right fw-bold" style="color:${avgB <= avgA ? colB : 'var(--text-muted)'}">${avgB.toFixed(2)}</div>
+                <div class="text-right">P${bestB}</div>
+                <div class="text-right">P${worstB}</div>
+            </div>
+        </div>`;
+
+    return `
+        <div class="label mb-2 h2h-chart-header">
+            <span class="h2h-chart-title"><i class="bi bi-bar-chart-steps me-2"></i>STANDING_POSITION_PER_ROUND</span>
+            <div class="h2h-zoom-group">${zoomBtns}</div>
+        </div>
+        <div class="stats-card${scrollable ? ' chart-scroll' : ''}" style="${scrollable ? '' : 'padding:1rem 0;overflow:hidden'}">
+            <svg viewBox="0 0 ${W} ${H}" class="stats-chart" style="${scrollable ? '' : 'width:100%;height:auto;display:block'}">
+                ${grid}${xLabels}
+                <path d="${pathA}" fill="none" stroke="${colA}" stroke-width="2"/>${dotsA}
+                <path d="${pathB}" fill="none" stroke="${colB}" stroke-width="2"/>${dotsB}
+            </svg>
+        </div>
+        ${miniTable}`;
 }
 
 // ── Round-by-round table ─────────────────────────────────
