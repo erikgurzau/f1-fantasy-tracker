@@ -50,6 +50,18 @@ function renderStandings() {
         const dRows      = allDrivers.map(d => buildPriceRow(d, 'drivers', d === p.team.captain)).join('');
         const cRows      = p.team.constructors.map(c => buildPriceRow(c, 'constructors', false)).join('');
 
+        const driverNames      = allDrivers.join('+');
+        const constructorNames = p.team.constructors.join('+');
+        const copyRow = `
+            <div class="detail-copy-row">
+                <button class="price-toggle" data-copy="${driverNames.replace(/"/g, '&quot;')}" onclick="copyTeamClipboard(this)">
+                    <i class="bi bi-clipboard me-1"></i>COPY_DRIVERS
+                </button>
+                <button class="price-toggle" data-copy="${constructorNames.replace(/"/g, '&quot;')}" onclick="copyTeamClipboard(this)">
+                    <i class="bi bi-clipboard me-1"></i>COPY_CONSTRUCTORS
+                </button>
+            </div>`;
+
         const budgetDiff  = p.budgetCurr - p.budgetInit;
         const totalBlock  = `
             <div class="detail-total">
@@ -90,6 +102,7 @@ function renderStandings() {
                     </div>
                     ${cRows}
                     ${totalBlock}
+                    ${copyRow}
                 </div>
             </div>`;
     });
@@ -115,6 +128,39 @@ function buildPriceRow(code, type, isCap) {
                 <span>${currP.toFixed(1)}M</span>
             </div>
         </div>`;
+}
+
+function copyTeamClipboard(btn) {
+    const text = btn.dataset.copy;
+    if (!text) return;
+
+    const showCopied = () => {
+        if (btn._copyTimeout) clearTimeout(btn._copyTimeout);
+        const original = btn.innerHTML;
+        btn.classList.add('price-toggle--active');
+        btn.innerHTML = `<i class="bi bi-check2 me-1"></i>COPIED`;
+        btn._copyTimeout = setTimeout(() => {
+            btn.innerHTML = original;
+            btn.classList.remove('price-toggle--active');
+        }, 1500);
+    };
+
+    if (navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(text).then(showCopied).catch(() => fallbackCopy(text, showCopied));
+    } else {
+        fallbackCopy(text, showCopied);
+    }
+}
+
+function fallbackCopy(text, onDone) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); onDone(); } catch (e) { /* clipboard unavailable */ }
+    document.body.removeChild(ta);
 }
 
 function toggleDetail(id, rowEl) {

@@ -49,3 +49,7 @@
 .detail-total-val              { font-size:1.05rem; }
 .detail-total-diff             { font-size:.72rem; margin-top:1px; }
 .detail-total-curr             { display:flex; align-items:baseline; justify-content:flex-end; gap:.4rem; }
+
+/* copy-to-clipboard buttons */
+.detail-copy-row { display:flex; gap:.5rem; margin-top:.85rem; padding-top:.85rem; border-top:1px solid var(--border); }
+.detail-copy-row .price-toggle { flex:1; text-align:center; }

@@ -5,7 +5,7 @@ let h2hPlayerA = null;
 let h2hPlayerB = null;
 let h2hZoomCum = 'fit'; // 'fit' | '1x' | '2x' | 'max'
 let h2hZoomGap = 'fit';
-let h2hZoomPos = 'fit';
+let h2hPosMode = 'general'; // 'general' | 'round'
 
 function renderH2H() {
     const wrap = document.getElementById('h2h-wrap');
@@ -96,9 +96,8 @@ function setH2HPlayer(slot, code) {
 }
 
 function setH2HZoom(chart, level) {
-    if (chart === 'cum')      h2hZoomCum = level;
-    else if (chart === 'pos') h2hZoomPos = level;
-    else                      h2hZoomGap = level;
+    if (chart === 'cum') h2hZoomCum = level;
+    else                 h2hZoomGap = level;
     // Re-render only the content section, not the whole selector
     const pA = league().players.find(p => p.code === h2hPlayerA);
     const pB = league().players.find(p => p.code === h2hPlayerB);
@@ -106,6 +105,17 @@ function setH2HZoom(chart, level) {
     const wrap = document.getElementById('h2h-wrap');
     if (!wrap || !pA || !pB) return;
     // Only replace the content div, keep selector intact
+    const content = wrap.querySelector('.h2h-content');
+    if (content) content.outerHTML = `<div class="h2h-content">${buildH2HContent(pA, pB, doneRounds)}</div>`;
+}
+
+function setH2HPosMode(mode) {
+    h2hPosMode = mode;
+    const pA = league().players.find(p => p.code === h2hPlayerA);
+    const pB = league().players.find(p => p.code === h2hPlayerB);
+    const doneRounds = REG.rounds.filter(r => isRoundComplete(r) || isRoundPartial(r));
+    const wrap = document.getElementById('h2h-wrap');
+    if (!wrap || !pA || !pB) return;
     const content = wrap.querySelector('.h2h-content');
     if (content) content.outerHTML = `<div class="h2h-content">${buildH2HContent(pA, pB, doneRounds)}</div>`;
 }
@@ -312,16 +322,12 @@ function computeRoundRanks(rounds) {
 function buildH2HPositionChart(pA, pB, rounds, colA, colB) {
     if (!rounds.length) return '';
     const totalPlayers = league().players.length;
-    const ranks   = computeRoundRanks(rounds);
+    const ranks   = h2hPosMode === 'round' ? computeRoundOnlyRanks(rounds) : computeRoundRanks(rounds);
     const seriesA = ranks[pA.code].map(x => x.rank);
     const seriesB = ranks[pB.code].map(x => x.rank);
 
     const n = rounds.length;
-    const STEP = { 'fit': null, '1x': 20, '2x': 38, 'max': 60 };
-    const step = STEP[h2hZoomPos];
-    const W    = step ? Math.max(480, (n - 1) * step + 100) : 480;
-    const H    = 240;
-    const scrollable = step !== null;
+    const W = 480, H = 240;
 
     const minV = 1, maxV = Math.max(totalPlayers, 2);
     const rng  = maxV - minV || 1;
@@ -358,42 +364,50 @@ function buildH2HPositionChart(pA, pB, rounds, colA, colB) {
                  <text x="${PAD.l-6}" y="${(y+3).toFixed(1)}" fill="var(--text-muted)" font-size="9" text-anchor="end">P${v}</text>`;
     }).join('');
 
-    const zoomBtns = ['fit','1x','2x','max'].map(z =>
-        `<button onclick="setH2HZoom('pos','${z}')" class="h2h-zoom-btn${h2hZoomPos===z?' h2h-zoom-btn--active':''}">${z.toUpperCase()}</button>`
+    const modeBtns = ['general','round'].map(m =>
+        `<button onclick="setH2HPosMode('${m}')" class="h2h-zoom-btn${h2hPosMode===m?' h2h-zoom-btn--active':''}">${m.toUpperCase()}</button>`
     ).join('');
 
     const avg = arr => arr.reduce((s, v) => s + v, 0) / arr.length;
     const avgA = avg(seriesA), avgB = avg(seriesB);
     const bestA = Math.min(...seriesA), worstA = Math.max(...seriesA);
     const bestB = Math.min(...seriesB), worstB = Math.max(...seriesB);
-    const cols  = 'grid-template-columns:1fr 84px 84px 84px;';
+    const winsA = seriesA.filter(v => v === 1).length;
+    const winsB = seriesB.filter(v => v === 1).length;
+    const lastLabel = h2hPosMode === 'round' ? 'R_WINS' : 'TIME_LEAD';
+    const cols  = 'grid-template-columns:1fr 84px 84px 84px 84px;';
 
     const miniTable = `
         <div class="stats-card p-0 mt-2">
             <div class="h2h-round-row h2h-round-hd" style="${cols}">
-                <div>PLAYER</div><div class="text-right">AVG_POS</div><div class="text-right">BEST</div><div class="text-right">WORST</div>
+                <div>PLAYER</div><div class="text-right">AVG_POS</div><div class="text-right">BEST</div><div class="text-right">WORST</div><div class="text-right">${lastLabel}</div>
             </div>
             <div class="h2h-round-row" style="${cols}">
                 <div class="fw-bold" style="color:${colA}">${pA.code}</div>
                 <div class="text-right fw-bold" style="color:${avgA <= avgB ? colA : 'var(--text-muted)'}">${avgA.toFixed(2)}</div>
                 <div class="text-right">P${bestA}</div>
                 <div class="text-right">P${worstA}</div>
+                <div class="text-right${winsA >= winsB ? ' fw-bold' : ''}" style="color:${winsA >= winsB ? colA : 'var(--text-muted)'}">${winsA}</div>
             </div>
             <div class="h2h-round-row" style="${cols}">
                 <div class="fw-bold" style="color:${colB}">${pB.code}</div>
                 <div class="text-right fw-bold" style="color:${avgB <= avgA ? colB : 'var(--text-muted)'}">${avgB.toFixed(2)}</div>
                 <div class="text-right">P${bestB}</div>
                 <div class="text-right">P${worstB}</div>
+                <div class="text-right${winsB >= winsA ? ' fw-bold' : ''}" style="color:${winsB >= winsA ? colB : 'var(--text-muted)'}">${winsB}</div>
             </div>
         </div>`;
 
+    const title = h2hPosMode === 'round' ? 'ROUND_POSITION' : 'CHAMPIONSHIP_POSITION';
+    const sub   = h2hPosMode === 'round' ? '(ranking within that round only)' : '(cumulative standing after each round)';
+
     return `
         <div class="label mb-2 h2h-chart-header">
-            <span class="h2h-chart-title"><i class="bi bi-bar-chart-steps me-2"></i>STANDING_POSITION_PER_ROUND</span>
-            <div class="h2h-zoom-group">${zoomBtns}</div>
+            <span class="h2h-chart-title"><i class="bi bi-bar-chart-steps me-2"></i>${title}<br><span class="muted h2h-chart-sub ms-3">${sub}</span></span>
+            <div class="h2h-zoom-group">${modeBtns}</div>
         </div>
-        <div class="stats-card${scrollable ? ' chart-scroll' : ''}" style="${scrollable ? '' : 'padding:1rem 0;overflow:hidden'}">
-            <svg viewBox="0 0 ${W} ${H}" class="stats-chart" style="${scrollable ? '' : 'width:100%;height:auto;display:block'}">
+        <div class="stats-card" style="padding:1rem 0;overflow:hidden">
+            <svg viewBox="0 0 ${W} ${H}" class="stats-chart" style="width:100%;height:auto;display:block">
                 ${grid}${xLabels}
                 <path d="${pathA}" fill="none" stroke="${colA}" stroke-width="2"/>${dotsA}
                 <path d="${pathB}" fill="none" stroke="${colB}" stroke-width="2"/>${dotsB}
@@ -401,6 +415,22 @@ function buildH2HPositionChart(pA, pB, rounds, colA, colB) {
         </div>
         ${miniTable}`;
 }
+
+// ── Round-only position (rank within that single round's results) ──
+function computeRoundOnlyRanks(rounds) {
+    const allPlayers = league().players;
+    const ranksByCode = {};
+    allPlayers.forEach(p => { ranksByCode[p.code] = []; });
+
+    rounds.forEach(r => {
+        const sorted = [...allPlayers].sort((a, b) => (b.rounds[r.id]?.pts ?? -Infinity) - (a.rounds[r.id]?.pts ?? -Infinity));
+        sorted.forEach((p, i) => { ranksByCode[p.code].push({ r, rank: i + 1 }); });
+    });
+
+    return ranksByCode;
+}
+
+
 
 // ── Round-by-round table ─────────────────────────────────
 function buildH2HRoundTable(pA, pB, rounds, colA, colB) {
