@@ -53,7 +53,15 @@ function buildStatsShortcuts() {
 }
 
 // ── SEASON RECORDS ────────────────────────────────────────
-function buildSeasonRecords(players, rounds) {
+function buildSeasonRecords(players, doneRounds) {
+    // Records consider COMPLETED rounds only (partial / not-updated rounds are ignored)
+    const rounds = doneRounds.filter(r => isRoundComplete(r));
+    if (!rounds.length) {
+        return `
+        <div class="label mb-2"><i class="bi bi-award me-2"></i>SEASON_RECORDS</div>
+        <div class="stats-empty label mb-4">NO_COMPLETED_ROUNDS_YET</div>`;
+    }
+
     const allRounds = rounds.flatMap(r =>
         players.map(p => ({ p, r, pts: p.rounds[r.id]?.pts ?? null })).filter(x => x.pts !== null)
     );
@@ -85,10 +93,17 @@ function buildSeasonRecords(players, rounds) {
     const bestStreakVal = streaksSorted[0].streak;
     const bestStreakers = streaksSorted.filter(x => x.streak === bestStreakVal);
 
-    // most round wins
-    const winsSorted   = [...players].sort((a, b) => b.wins - a.wins);
-    const mostWinsVal  = winsSorted[0].wins;
-    const mostWinners  = players.filter(p => p.wins === mostWinsVal);
+    // most round wins — completed rounds only
+    const winsByCode = {};
+    players.forEach(p => { winsByCode[p.code] = 0; });
+    rounds.forEach(r => {
+        const roundPts = players.map(pp => pp.rounds[r.id]?.pts ?? -Infinity);
+        const top      = Math.max(...roundPts);
+        if (top === -Infinity) return;
+        players.forEach(p => { if ((p.rounds[r.id]?.pts ?? -Infinity) === top) winsByCode[p.code]++; });
+    });
+    const mostWinsVal  = Math.max(...players.map(p => winsByCode[p.code]));
+    const mostWinners  = players.filter(p => winsByCode[p.code] === mostWinsVal);
 
     // std dev / consistency
     const stdDevs = players.map(p => {
@@ -120,11 +135,18 @@ function buildSeasonRecords(players, rounds) {
     const bestAccs    = accSorted.filter(x => x.acc === bestAccVal);
     const worstAccs   = accSorted.filter(x => x.acc === worstAccVal);
 
-    // budget gain
+    // budget gain — price as of the last COMPLETED round
+    const priceAsOf = (code, kind, init) => {
+        for (let i = rounds.length - 1; i >= 0; i--) {
+            const v = RESULTS[rounds[i].id]?.[kind]?.[code]?.price;
+            if (v != null) return v;
+        }
+        return init;
+    };
     const budgetSorted = players.map(p => {
         const allD = [p.team.captain, ...p.team.drivers];
-        const gain = allD.reduce((s, d) => s + ((latestPrice(d,'drivers') ?? REG.drivers[d]?.init_price ?? 0) - (REG.drivers[d]?.init_price ?? 0)), 0)
-                   + p.team.constructors.reduce((s, c) => s + ((latestPrice(c,'constructors') ?? REG.constructors[c]?.init_price ?? 0) - (REG.constructors[c]?.init_price ?? 0)), 0);
+        const gain = allD.reduce((s, d) => { const i0 = REG.drivers[d]?.init_price ?? 0; return s + (priceAsOf(d, 'drivers', i0) - i0); }, 0)
+                   + p.team.constructors.reduce((s, c) => { const i0 = REG.constructors[c]?.init_price ?? 0; return s + (priceAsOf(c, 'constructors', i0) - i0); }, 0);
         return { p, gain };
     }).sort((a, b) => b.gain - a.gain);
     const topBudgetVal = budgetSorted[0].gain;

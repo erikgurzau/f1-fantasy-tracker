@@ -375,7 +375,7 @@ function buildH2HPositionChart(pA, pB, rounds, colA, colB) {
     const winsA = seriesA.filter(v => v === 1).length;
     const winsB = seriesB.filter(v => v === 1).length;
     const lastLabel = h2hPosMode === 'round' ? 'R_WINS' : 'TIME_LEAD';
-    const cols  = 'grid-template-columns:1fr 84px 84px 84px 84px;';
+    const cols  = 'grid-template-columns:44px repeat(4,minmax(0,1fr));column-gap:4px;';
 
     const miniTable = `
         <div class="stats-card p-0 mt-2">
@@ -399,11 +399,10 @@ function buildH2HPositionChart(pA, pB, rounds, colA, colB) {
         </div>`;
 
     const title = h2hPosMode === 'round' ? 'ROUND_POSITION' : 'CHAMPIONSHIP_POSITION';
-    const sub   = h2hPosMode === 'round' ? '(ranking within that round only)' : '(cumulative standing after each round)';
 
     return `
         <div class="label mb-2 h2h-chart-header">
-            <span class="h2h-chart-title"><i class="bi bi-bar-chart-steps me-2"></i>${title}<br><span class="muted h2h-chart-sub ms-3">${sub}</span></span>
+            <span class="h2h-chart-title"><i class="bi bi-bar-chart-steps me-2"></i>${title}</span>
             <div class="h2h-zoom-group">${modeBtns}</div>
         </div>
         <div class="stats-card" style="padding:1rem 0;overflow:hidden">

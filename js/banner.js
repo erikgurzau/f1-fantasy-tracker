@@ -148,15 +148,14 @@ function renderBanner() {
     const current = currentRound ? currentRound.n : REG.rounds.filter(r => isRoundComplete(r) || isRoundPartial(r)).length;
     const pct     = Math.round(current / total * 100);
     const lastWithData = (() => {
-        // Only rounds where the race has actually taken place count as
-        // LAST_ROUND. A round with only pre-race session data (q, sq…)
-        // loaded in advance is excluded — the race hasn't happened yet.
-        const PRE_RACE = new Set(['fp1', 'fp2', 'fp3', 'sq', 'sr', 'q']);
+        // Only rounds whose race has actually been scored (updated_to === 'r')
+        // count as LAST_ROUND. Anything else (fp*, sq, sr, q, 'pre-gp', null…)
+        // is data loaded in advance — the race hasn't happened yet.
         let r = null;
         for (const round of REG.rounds) {
             const rd = RESULTS[round.id];
             if (!rd) continue;
-            if (rd.updated_to && PRE_RACE.has(rd.updated_to)) continue;
+            if (rd.updated_to?.toLowerCase() !== 'r') continue;
             r = round;
         }
         return r;
