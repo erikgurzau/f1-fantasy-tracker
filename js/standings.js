@@ -49,16 +49,17 @@ function renderStandings() {
         const allDrivers = [p.team.captain, ...p.team.drivers];
         const dRows      = allDrivers.map(d => buildPriceRow(d, 'drivers', d === p.team.captain)).join('');
         const cRows      = p.team.constructors.map(c => buildPriceRow(c, 'constructors', false)).join('');
+        const outRows    = buildTransferRows(p);
 
         const driverNames      = allDrivers.join('+');
         const constructorNames = p.team.constructors.join('+');
         const copyRow = `
             <div class="detail-copy-row">
                 <button class="price-toggle" data-copy="${driverNames.replace(/"/g, '&quot;')}" onclick="copyTeamClipboard(this)">
-                    <i class="bi bi-clipboard me-1"></i>COPY_DRIVERS
+                    <span class="d-flex flex-column align-items-center lh-sm"><span><i class="bi bi-clipboard me-1"></i>COPY</span><span>DRIVERS</span></span>
                 </button>
                 <button class="price-toggle" data-copy="${constructorNames.replace(/"/g, '&quot;')}" onclick="copyTeamClipboard(this)">
-                    <i class="bi bi-clipboard me-1"></i>COPY_CONSTRUCTORS
+                    <span class="d-flex flex-column align-items-center lh-sm"><span><i class="bi bi-clipboard me-1"></i>COPY</span><span>CONSTRUCTORS</span></span>
                 </button>
             </div>`;
 
@@ -101,6 +102,7 @@ function renderStandings() {
                         <div>CONSTRUCTOR</div><div>INIT</div><div>CURR</div>
                     </div>
                     ${cRows}
+                    ${outRows}
                     ${totalBlock}
                     ${copyRow}
                 </div>
@@ -108,6 +110,32 @@ function renderStandings() {
     });
 
     wrap.innerHTML = html;
+}
+
+function buildTransferRows(p) {
+    const moves = p.transfers.filter(t => t.out);
+    if (!moves.length) return '';
+    const tag = (code) => {
+        const isDrv = !!REG.drivers[code];
+        const con   = isDrv ? (REG.drivers[code].constructor ?? 'cad').toLowerCase() : code.toLowerCase();
+        return `<div class="driver-tag" style="border-color:var(--${con})">${code}</div>`;
+    };
+    const rows = moves.map(t => {
+        const rnd = REG.rounds.find(r => r.id === t.round);
+        const rndHtml = rnd
+            ? `<img src="https://flagcdn.com/w40/${rnd.cc ?? 'un'}.png" width="16" height="11" class="flag-inline me-1">R${rnd.n}`
+            : '';
+        return `
+        <div class="hub-row price-row">
+            <div class="d-flex align-items-center">${tag(t.out)}<i class="bi bi-arrow-down-short neg ms-1"></i></div>
+            <div class="d-flex align-items-center justify-content-end"><i class="bi bi-arrow-up-short pos me-1"></i>${tag(t.in)}</div>
+            <div class="d-flex align-items-center justify-content-end">${rndHtml}</div>
+        </div>`;
+    }).join('');
+    return `
+        <div class="hub-row price-row hub-row-hd detail-section-sep">
+            <div>OUT</div><div class="text-end">IN</div><div class="text-end">ROUND</div>
+        </div><div class="pb-2">${rows}</div>`;
 }
 
 function buildPriceRow(code, type, isCap) {

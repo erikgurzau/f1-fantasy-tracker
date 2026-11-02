@@ -137,6 +137,7 @@ window.onload = async () => {
     tabRendered.overview = true;
 
     startClock();
+    renderChampion();
     renderBanner();
     renderStandings();
     renderCarousel();

@@ -1,0 +1,34 @@
+/* ── CHAMPION CARD ───────────────────────────────────────
+   Gold card: flat (app style, no shadows) with the rotating border
+   used by the round cards (spinBorder / --angle in style.css). */
+.champ-card {
+    position:relative; overflow:hidden; margin-bottom:1.5rem;
+    background:rgba(227,179,65,.45);
+}
+.champ-card::before {
+    content:''; position:absolute; inset:0; z-index:0;
+    background:conic-gradient(from var(--angle, 0deg), transparent 0deg, #fff1a8 60deg, transparent 120deg);
+    animation:spinBorder 4s linear infinite;
+}
+.champ-card::after {
+    content:''; position:absolute; inset:2px; z-index:1;
+    background:linear-gradient(135deg, rgba(227,179,65,.32) 0%, rgba(227,179,65,.10) 55%, rgba(227,179,65,.22) 100%), var(--bg-surface);
+}
+.champ-card > * { position:relative; z-index:2; }
+.champ-card > .champ-confetti { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:2; }
+
+.champ-label { font-size:.82rem; text-transform:uppercase; letter-spacing:.08em; font-weight:700; color:var(--warn); }
+
+.champ-head { display:flex; align-items:center; gap:1rem; padding:1rem 1rem .75rem; }
+.champ-icon { font-size:3.6rem; font-weight:700; line-height:1; flex-shrink:0; color:var(--warn); animation:champ-pop .8s cubic-bezier(.2,1.4,.4,1) both; }
+.champ-id   { min-width:0; }
+.champ-code { font-size:2.2rem; font-weight:700; line-height:1.1; color:var(--warn); }
+.champ-name { font-size:.95rem; font-weight:700; text-transform:uppercase; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+.champ-sep   { height:1px; background:rgba(227,179,65,.5); }
+.champ-stats { display:grid; grid-template-columns:repeat(3, 1fr); padding:.75rem 1rem; }
+.champ-stats .champ-label { color:var(--text-muted); }
+.champ-stat-val { font-size:1.4rem; font-weight:700; color:var(--warn); }
+
+@keyframes champ-pop { from { transform:scale(.3); opacity:0; } to { transform:scale(1); opacity:1; } }
+@media (prefers-reduced-motion: reduce) { .champ-icon { animation:none; } }

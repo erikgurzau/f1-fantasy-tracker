@@ -22,7 +22,8 @@
         "LIN":{"name":"Arvid Lindblad","init_price":6.2,"constructor":"VRB"},
         "COL":{"name":"Franco Colapinto","init_price":6.2,"constructor":"ALP"},
         "PER":{"name":"Sergio Perez","init_price":6.0,"constructor":"CAD"},
-        "BOT":{"name":"Valtteri Bottas","init_price":5.9,"constructor":"CAD"}
+        "BOT":{"name":"Valtteri Bottas","init_price":5.9,"constructor":"CAD"},
+        "HIR":{"name":"Ryo Hirakawa","init_price":6.6,"constructor":"HAA"}
     },
     "constructors":{
         "MER":{"name":"Mercedes","init_price":29.3},
@@ -69,7 +70,7 @@
                 {"code":"ERI","name":"Kebab Creatine Team","team":{"constructors":["MCL","FER"],"captain":"ANT","drivers":["BOR","COL","PER","BOT"]}},
                 {"code":"PIE","name":"Next Year Since 2008","team":{"constructors":["FER","HAA"],"captain":"LEC","drivers":["PIA","BEA","HUL","LAW"]}},
                 {"code":"AMA","name":"Aman's Siumm 60M Scuderia","team":{"constructors":["FER","VRB"],"captain":"LEC","drivers":["VER","BEA","LAW","PER"]}},
-                {"code":"LOR","name":"PowerBank Mercedes 2026","team":{"constructors":["MER","VRB"],"captain":"RUS","drivers":["GAS","SAI","OCO","BOT"]}}
+                {"code":"LOR","name":"PowerBank Mercedes 2026","team":{"constructors":["MER","VRB"],"captain":"RUS","drivers":["GAS","SAI","OCO","BOT"]},"transfers":[{"round":"brazil","out":"OCO","in":"HIR"}]}
             ]
         },
         {

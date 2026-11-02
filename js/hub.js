@@ -357,8 +357,8 @@ function buildPlayerCard(p, rData, maxPts) {
 
 function buildDriverRows(p, rData) {
     let rows = `<div class="hub-row hub-row-hd"><div>DRIVER</div><div>PTS</div><div>XPT</div></div>`;
-    [p.team.captain, ...p.team.drivers].forEach(d => {
-        const dd  = rData.drivers[d]; if (!dd) return;
+    Object.keys(rData.drivers).forEach(d => {
+        const dd  = rData.drivers[d];
         const con = REG.drivers[d]?.constructor?.toLowerCase() ?? 'cad';
         const pts = dd.isCap ? dd.pts * 2 : dd.pts;
         const exp = dd.isCap ? dd.exp * 2 : dd.exp;
@@ -376,8 +376,8 @@ function buildDriverRows(p, rData) {
 
 function buildConstructorRows(p, rData) {
     let rows = `<div class="hub-row hub-row-hd hub-section-sep"><div>CONSTRUCTOR</div><div>PTS</div><div>XPT</div></div>`;
-    p.team.constructors.forEach(c => {
-        const cd = rData.constructors[c]; if (!cd) return;
+    Object.keys(rData.constructors).forEach(c => {
+        const cd = rData.constructors[c];
         rows += `
             <div class="hub-row">
                 <div class="driver-tag" style="border-color:var(--${c.toLowerCase()})">${c}</div>

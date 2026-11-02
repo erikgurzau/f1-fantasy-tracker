@@ -4,7 +4,7 @@
 async function loadData() {
     [REG, RESULTS] = await Promise.all([
         fetch('./data/registry.json').then(r => r.json()),
-        fetch('./data/points.json').then(r => r.json()).catch(() => ({})),
+        fetch(new URLSearchParams(location.search).has('fake') ? './data/points_fake.json' : './data/points.json').then(r => r.json()).catch(() => ({})),
     ]);
 }
 
@@ -18,30 +18,59 @@ function latestPrice(code, type) {
     return price;
 }
 
+// Transfers: p.team in registry is the STARTING team; p.transfers is an optional list of
+// { round, out, in } (effective from `round` included) or { round, captain } (captain swap).
+function applyTransfer(team, t) {
+    const next = { captain: team.captain, drivers: [...team.drivers], constructors: [...team.constructors] };
+    if (t.captain && !t.out) {
+        const i = next.drivers.indexOf(t.captain);
+        if (i >= 0) next.drivers[i] = next.captain;
+        next.captain = t.captain;
+        return next;
+    }
+    if (next.captain === t.out) next.captain = t.in;
+    else if (next.drivers.includes(t.out)) next.drivers[next.drivers.indexOf(t.out)] = t.in;
+    else if (next.constructors.includes(t.out)) next.constructors[next.constructors.indexOf(t.out)] = t.in;
+    return next;
+}
+
+function teamAtRound(startTeam, transfers, roundIdx) {
+    return transfers.reduce((team, t) =>
+        REG.rounds.findIndex(r => r.id === t.round) <= roundIdx ? applyTransfer(team, t) : team, startTeam);
+}
+
 function precompute() {
     REG.championships.forEach(champ => {
-        const players = champ.players.map(p => {
+        const players = champ.players.map(pl => {
+            const startTeam = pl.team;
+            const transfers = [...(pl.transfers ?? [])]
+                .sort((a, b) => REG.rounds.findIndex(r => r.id === a.round) - REG.rounds.findIndex(r => r.id === b.round));
+            const p = { ...pl, startTeam, transfers, team: teamAtRound(startTeam, transfers, REG.rounds.length - 1) };
             const rounds = {};
+            const outPts = {}; // points earned by pieces no longer in the current team
             let totalPts = 0, totalExp = 0;
 
-            REG.rounds.forEach(r => {
+            REG.rounds.forEach((r, ri) => {
                 const rd = RESULTS[r.id]; if (!rd) return;
+                const team = teamAtRound(startTeam, transfers, ri);
                 let rPts = 0, rExp = 0;
                 const dBrk = {}, cBrk = {};
 
-                [p.team.captain, ...p.team.drivers].forEach(d => {
-                    const isCap = d === p.team.captain;
+                [team.captain, ...team.drivers].forEach(d => {
+                    const isCap = d === team.captain;
                     const base  = rd.drivers[d]; if (!base) return;
                     const pts   = isCap ? base.pts * 2 : base.pts;
                     const exp   = isCap ? base.exp * 2 : base.exp;
                     dBrk[d] = { pts: base.pts, exp: base.exp, isCap };
                     rPts += pts; rExp += exp;
+                    if (d !== p.team.captain && !p.team.drivers.includes(d)) outPts[d] = (outPts[d] ?? 0) + pts;
                 });
 
-                p.team.constructors.forEach(c => {
+                team.constructors.forEach(c => {
                     const base = rd.constructors[c]; if (!base) return;
                     cBrk[c] = { pts: base.pts, exp: base.exp };
                     rPts += base.pts; rExp += base.exp;
+                    if (!p.team.constructors.includes(c)) outPts[c] = (outPts[c] ?? 0) + base.pts;
                 });
 
                 const acc = rExp !== 0
@@ -56,12 +85,13 @@ function precompute() {
                 : 0;
 
             const allDrivers  = [p.team.captain, ...p.team.drivers];
-            const budgetInit  = allDrivers.reduce((s, d) => s + (REG.drivers[d]?.init_price ?? 0), 0)
-                              + p.team.constructors.reduce((s, c) => s + (REG.constructors[c]?.init_price ?? 0), 0);
+            const startDrivers = [startTeam.captain, ...startTeam.drivers];
+            const budgetInit  = startDrivers.reduce((s, d) => s + (REG.drivers[d]?.init_price ?? 0), 0)
+                              + startTeam.constructors.reduce((s, c) => s + (REG.constructors[c]?.init_price ?? 0), 0);
             const budgetCurr  = allDrivers.reduce((s, d) => s + (latestPrice(d, 'drivers') ?? REG.drivers[d]?.init_price ?? 0), 0)
                               + p.team.constructors.reduce((s, c) => s + (latestPrice(c, 'constructors') ?? REG.constructors[c]?.init_price ?? 0), 0);
 
-            return { ...p, rounds, totalPts, totalExp, totalAcc, budgetInit, budgetCurr };
+            return { ...p, rounds, totalPts, totalExp, totalAcc, budgetInit, budgetCurr, outPts };
         });
 
         const sorted     = [...players].sort((a, b) => b.totalPts - a.totalPts);
