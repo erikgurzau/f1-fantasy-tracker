@@ -47,12 +47,12 @@ function renderStandings() {
         const rankClass = prevRankMap[p.code] == null ? '' : (prevRankMap[p.code] - p.rank > 0 ? ' pos' : prevRankMap[p.code] - p.rank < 0 ? ' neg' : '');
 
         const allDrivers = [p.team.captain, ...p.team.drivers];
-        const dRows      = allDrivers.map(d => buildPriceRow(d, 'drivers', d === p.team.captain)).join('');
-        const cRows      = p.team.constructors.map(c => buildPriceRow(c, 'constructors', false)).join('');
-        const outRows    = buildTransferRows(p);
+        const dRows      = buildRosterRows(allDrivers, 'drivers', p);
+        const cRows      = buildRosterRows(p.team.constructors, 'constructors', p);
+        const transferRows = buildTransferRows(p);
 
-        const driverNames      = allDrivers.join('+');
-        const constructorNames = p.team.constructors.join('+');
+        const driverNames      = activeRoster(allDrivers, p).join('+');
+        const constructorNames = activeRoster(p.team.constructors, p).join('+');
         const copyRow = `
             <div class="detail-copy-row">
                 <button class="price-toggle" data-copy="${driverNames.replace(/"/g, '&quot;')}" onclick="copyTeamClipboard(this)">
@@ -102,8 +102,8 @@ function renderStandings() {
                         <div>CONSTRUCTOR</div><div>INIT</div><div>CURR</div>
                     </div>
                     ${cRows}
-                    ${outRows}
                     ${totalBlock}
+                    ${transferRows}
                     ${copyRow}
                 </div>
             </div>`;
@@ -113,7 +113,7 @@ function renderStandings() {
 }
 
 function buildTransferRows(p) {
-    const moves = p.transfers.filter(t => t.out);
+    const moves = p.transfers?.filter(t => t.out) ?? [];
     if (!moves.length) return '';
     const tag = (code) => {
         const isDrv = !!REG.drivers[code];
@@ -127,28 +127,70 @@ function buildTransferRows(p) {
             : '';
         return `
         <div class="hub-row price-row">
-            <div class="d-flex align-items-center">${tag(t.out)}<i class="bi bi-arrow-down-short neg ms-1"></i></div>
-            <div class="d-flex align-items-center justify-content-end"><i class="bi bi-arrow-up-short pos me-1"></i>${tag(t.in)}</div>
+            <div class="d-flex align-items-center">${tag(t.out)}<i class="bi bi-arrow-down-short neg ms-1"></i><span class="neg diff-small">OUT</span></div>
+            <div class="d-flex align-items-center justify-content-end">${tag(t.in)}<i class="bi bi-arrow-up-short pos ms-1"></i><span class="pos diff-small">IN</span></div>
             <div class="d-flex align-items-center justify-content-end">${rndHtml}</div>
         </div>`;
     }).join('');
     return `
         <div class="hub-row price-row hub-row-hd detail-section-sep">
-            <div>OUT</div><div class="text-end">IN</div><div class="text-end">ROUND</div>
-        </div><div class="pb-2">${rows}</div>`;
+            <div>TRANSFERS</div><div></div><div class="text-end">ROUND</div>
+        </div>${rows}`;
 }
 
-function buildPriceRow(code, type, isCap) {
+// Roster after applying every transfer (same slot: out → in)
+function activeRoster(codes, p) {
+    return codes.map(c => {
+        let cur = c;
+        for (const t of p.transfers ?? []) if (t.out === cur && t.in) cur = t.in;
+        return cur;
+    });
+}
+
+// Price rows for a list of drivers/constructors. A transferred-out code gets a
+// red OUT arrow; its replacement is listed right below it with a green IN arrow.
+// Works whether `codes` is the original team (…OCO…) or already the post-transfer
+// one (…CAM…): in both cases the OUT driver is shown followed by its replacement.
+function buildRosterRows(codes, type, p) {
+    const transfers = (p.transfers ?? []).filter(t => t.out && t.in);
+    const seen = new Set();
+    let html = '';
+
+    // follow "in ← out" links back to the original driver of that slot
+    const rootOf = code => {
+        const guard = new Set();
+        let c = code;
+        for (;;) {
+            const t = transfers.find(t => t.in === c);
+            if (!t || guard.has(c)) return c;
+            guard.add(c);
+            c = t.out;
+        }
+    };
+    const emit = (code, isIn) => {
+        if (seen.has(code)) return;
+        seen.add(code);
+        const next = transfers.filter(t => t.out === code);
+        html += buildPriceRow(code, type, code === p.team.captain, { isIn, isOut: next.length > 0 });
+        next.forEach(t => emit(t.in, true));
+    };
+    codes.forEach(c => emit(rootOf(c), false));
+    return html;
+}
+
+function buildPriceRow(code, type, isCap, flags = {}) {
     const reg   = type === 'drivers' ? REG.drivers[code] : REG.constructors[code];
     if (!reg) return '';
     const con   = type === 'drivers' ? reg.constructor.toLowerCase() : code.toLowerCase();
     const initP = reg.init_price ?? 0;
     const currP = latestPrice(code, type) ?? initP;
     const diff  = currP - initP;
+    const arrows = (flags.isIn  ? '<i class="bi bi-arrow-up-short pos ms-1"></i><span class="pos diff-small">IN</span>'    : '')
+                 + (flags.isOut ? '<i class="bi bi-arrow-down-short neg ms-1"></i><span class="neg diff-small">OUT</span>' : '');
     return `
         <div class="hub-row price-row">
             <div class="driver-tag" style="border-color:var(--${con})">
-                ${code}${isCap ? '<span class="x2">X2</span>' : ''}
+                ${code}${isCap ? '<span class="x2">X2</span>' : ''}${arrows}
             </div>
             <div>${initP.toFixed(1)}M</div>
             <div class="price-curr-cell">
