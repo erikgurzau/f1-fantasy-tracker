@@ -1,5 +1,5 @@
 // ── STATISTICS & ANALYTICS ───────────────────────────────
-// Depends on: common.js, data.js
+// Depends on: common.js, data.js, standings.js (activeRoster)
 
 let statsPlayerFilter = '';   // player code, '' = all
 
@@ -20,6 +20,7 @@ function renderStats() {
         ${buildDriverStats(doneRounds)}
         ${buildConstructorStats(doneRounds)}
         ${buildPlayerStats(doneRounds)}
+        <div class="mt-4">${buildSeasonTeamInsights()}</div>
     `;
 }
 
@@ -239,6 +240,190 @@ function buildSeasonRecords(players, doneRounds) {
         <div class="rec-grid b mb-4">${cells}</div>`;
 }
 
+// ── SEASON BEST TEAM ──────────────────────────────────────
+// Same logic as buildTeamInsights() in hub.js, but over the whole season:
+// the 5 drivers (captain ×2) + 2 constructors with the most points summed over
+// every COMPLETED round, within a budget. The team is held for the whole season.
+let seasonTeamBudget  = 100;
+let seasonTeamUseInit = true;    // true = INIT prices (default), false = CURR prices
+
+function pickSeasonBestTeam(drvPool, conPool, budget) {
+    const EPS = 1e-9;                       // float-safe budget comparison
+    let best = null, bestScore = -Infinity;
+    const set = [];
+
+    for (let i = 0; i < conPool.length; i++) {
+        for (let j = i + 1; j < conPool.length; j++) {
+            const c1 = conPool[i], c2 = conPool[j];
+            const conPrice = c1.price + c2.price;
+            const conPts   = c1.pts + c2.pts;
+            if (conPrice >= budget) continue;
+
+            const walk = (start, need, rem, pts, spent) => {
+                if (need === 0) {
+                    let cap = set[0];
+                    for (let k = 1; k < set.length; k++) if (set[k].pts > cap.pts) cap = set[k];
+                    const score = conPts + pts + cap.pts;          // captain bonus
+                    if (score > bestScore) {
+                        bestScore = score;
+                        best = { drv: [...set], cons: [c1, c2], captain: cap, totalPts: score, spent: conPrice + spent };
+                    }
+                    return;
+                }
+                if (start > drvPool.length - need) return;
+                for (let k = start; k < drvPool.length; k++) {
+                    const d = drvPool[k];
+                    if (d.price <= rem + EPS) {
+                        set.push(d);
+                        walk(k + 1, need - 1, rem - d.price, pts + d.pts, spent + d.price);
+                        set.pop();
+                    }
+                }
+            };
+            walk(0, 5, budget - conPrice, 0, 0);
+        }
+    }
+    return best;
+}
+
+function buildSeasonTeamInsights() {
+    return `<div id="season-team-wrap">${buildSeasonTeamInner()}</div>`;
+}
+
+function buildSeasonTeamInner() {
+    const BUDGET = seasonTeamBudget;
+    const useInit = seasonTeamUseInit;
+    const rounds = REG.rounds.filter(r => isRoundComplete(r));
+
+    const header = `<div class="label mb-2"><i class="bi bi-stars me-2"></i>SEASON_INSIGHTS</div>`;
+    if (!rounds.length) {
+        return `${header}<div class="stats-empty label mb-4">NO_COMPLETED_ROUNDS_YET</div>`;
+    }
+
+    // season points per driver / constructor (completed rounds only)
+    const sum = (kind, code) => {
+        let pts = 0, n = 0;
+        rounds.forEach(r => {
+            const e = RESULTS[r.id]?.[kind]?.[code];
+            if (e) { pts += e.pts ?? 0; n++; }
+        });
+        return n ? pts : null;
+    };
+    const drvPrice = code => useInit
+        ? (REG.drivers[code]?.init_price ?? 0)
+        : (latestPrice(code, 'drivers') ?? REG.drivers[code]?.init_price ?? 0);
+    const conPrice = code => useInit
+        ? (REG.constructors[code]?.init_price ?? 0)
+        : (latestPrice(code, 'constructors') ?? REG.constructors[code]?.init_price ?? 0);
+
+    const allDrivers = Object.keys(REG.drivers)
+        .map(code => ({ code, pts: sum('drivers', code), price: drvPrice(code) }))
+        .filter(d => d.pts !== null)
+        .sort((a, b) => b.pts - a.pts);
+    const allCons = Object.keys(REG.constructors)
+        .map(code => ({ code, pts: sum('constructors', code), price: conPrice(code) }))
+        .filter(c => c.pts !== null)
+        .sort((a, b) => b.pts - a.pts);
+
+    const minCost = [...allDrivers].sort((a, b) => a.price - b.price).slice(0, 5).reduce((s, d) => s + d.price, 0)
+                  + [...allCons].sort((a, b) => a.price - b.price).slice(0, 2).reduce((s, c) => s + c.price, 0);
+    const infeasible = allDrivers.length < 5 || allCons.length < 2 || minCost > BUDGET;
+    const team = infeasible ? null : pickSeasonBestTeam(allDrivers, allCons, BUDGET);
+
+    const config = `
+        <div class="insights-config-panel">
+            <div class="insights-config-row">
+                <span class="label col text-right"><i class="bi bi-cash me-2"></i>BUDGET</span>
+                <div class="col text-right">
+                    <input type="number" min="10" max="200" step="0.5" value="${BUDGET}"
+                        class="budget-input"
+                        onchange="setSeasonTeamBudget(+this.value)">
+                    <span class="muted" style="font-size:.82rem">M</span>
+                </div>
+            </div>
+            <div class="insights-config-sep"></div>
+            <div class="insights-config-row">
+                <span class="label col text-right"><i class="bi bi-tag me-2"></i>PRICE_MODE</span>
+                <div class="col text-right">
+                    <label class="insights-toggle-wrap">
+                        <input type="checkbox" class="insights-toggle-cb" ${useInit ? 'checked' : ''}
+                            onchange="toggleSeasonTeamPrice()">
+                        <span class="insights-toggle-track">
+                            <span class="insights-toggle-thumb"></span>
+                        </span>
+                        <span class="insights-toggle-label">${useInit ? 'INIT' : 'CURR'}</span>
+                    </label>
+                </div>
+            </div>
+        </div>`;
+
+    if (!team) {
+        const msg = (allDrivers.length < 5 || allCons.length < 2)
+            ? 'NOT_ENOUGH_DATA — need at least 5 drivers + 2 constructors'
+            : `BUDGET_TOO_LOW — min required: ${minCost.toFixed(1)}M for 5 drivers + 2 constructors`;
+        return `${header}${config}
+            <div class="card-db mb-4" style="border-color:var(--neg);color:var(--text-muted);font-size:.82rem">
+                <i class="bi bi-exclamation-triangle neg me-2"></i>${msg}
+            </div>`;
+    }
+
+    const dRows = team.drv.map(d => {
+        const isCap = d === team.captain;
+        const pts   = isCap ? d.pts * 2 : d.pts;
+        const con   = REG.drivers[d.code]?.constructor?.toLowerCase() ?? 'cad';
+        return `
+            <div class="hub-row">
+                <div class="driver-tag" style="border-color:var(--${con})">
+                    ${d.code}${isCap ? '<span class="x2">X2</span>' : ''}
+                </div>
+                <div class="${ptsClass(pts)}">${pts}</div>
+                <div class="muted" style="font-size:.78rem">${d.price.toFixed(1)}M</div>
+            </div>`;
+    }).join('');
+    const cRows = team.cons.map(c => `
+            <div class="hub-row">
+                <div class="driver-tag" style="border-color:var(--${c.code.toLowerCase()})">${c.code}</div>
+                <div class="${ptsClass(c.pts)}">${c.pts}</div>
+                <div class="muted" style="font-size:.78rem">${c.price.toFixed(1)}M</div>
+            </div>`).join('');
+
+    const first = rounds[0], last = rounds[rounds.length - 1];
+    const rangeTag = `<div class="s-player-name ps-4">${rounds.length === 1
+        ? `R${pad(first.n)}`
+        : `R${pad(first.n)} → R${pad(last.n)}`} · ${rounds.length} ${rounds.length === 1 ? 'ROUND' : 'ROUNDS'}</div>`;
+
+    return `${header}${config}
+        <div class="card-db mb-4">
+            <div class="card-header-row bb pb-2 mb-2">
+                <div class="card-header-left">
+                    <div class="s-code"><i class="bi bi-arrow-up-circle pos me-2"></i>BEST_TEAM</div>
+                    ${rangeTag}
+                </div>
+                <div class="card-header-right">
+                    <div class="card-pts ${team.totalPts > 0 ? 'pos' : 'neg'}">${team.totalPts} PTS</div>
+                    <div class="card-gap muted">${team.spent.toFixed(1)}M / ${BUDGET}M</div>
+                </div>
+            </div>
+            <div class="hub-row hub-row-hd"><div>DRIVER</div><div>PTS</div><div>PRICE</div></div>
+            ${dRows}
+            <div class="hub-row hub-row-hd hub-section-sep"><div>CONSTRUCTOR</div><div>PTS</div><div>PRICE</div></div>
+            ${cRows}
+        </div>`;
+}
+
+function refreshSeasonTeam() {
+    const el = document.getElementById('season-team-wrap');
+    if (el) el.innerHTML = buildSeasonTeamInner();
+}
+function setSeasonTeamBudget(v) {
+    seasonTeamBudget = Number.isFinite(v) && v > 0 ? v : 100;
+    refreshSeasonTeam();
+}
+function toggleSeasonTeamPrice() {
+    seasonTeamUseInit = !seasonTeamUseInit;
+    refreshSeasonTeam();
+}
+
 // ── PLAYER FILTER (shared, above driver + constructor sections) ───
 function buildPlayerFilter() {
     const players = league().players;
@@ -305,14 +490,18 @@ function getPlayerDriverCodes(playerCode) {
     if (!playerCode) return null;
     const p = league().players.find(x => x.code === playerCode);
     if (!p) return null;
-    return new Set([p.team.captain, ...p.team.drivers]);
+    const codes = new Set([p.team.captain, ...p.team.drivers]);
+    (p.transfers ?? []).forEach(t => { [t.out, t.in].forEach(c => { if (REG.drivers[c]) codes.add(c); }); });
+    return codes;
 }
 
 function getPlayerConstructorCodes(playerCode) {
     if (!playerCode) return null;
     const p = league().players.find(x => x.code === playerCode);
     if (!p) return null;
-    return new Set(p.team.constructors);
+    const codes = new Set(p.team.constructors);
+    (p.transfers ?? []).forEach(t => { [t.out, t.in].forEach(c => { if (REG.constructors[c]) codes.add(c); }); });
+    return codes;
 }
 
 // ── DRIVER STATS ──────────────────────────────────────────
@@ -339,7 +528,7 @@ function buildDriverStats(rounds) {
         const avgPts   = totalPts / count;
         const acc      = totalExp !== 0 ? Math.max(0, 100 - Math.abs(totalPts - totalExp) / Math.abs(totalExp) * 100) : 0;
         const selCount = allPlayers.filter(p =>
-            p.team.captain === code || p.team.drivers.includes(code)
+            activeRoster([p.team.captain, ...p.team.drivers], p).includes(code)
         ).length;
         return { code, name: info.name, con: info.constructor.toLowerCase(),
             totalPts, totalExp, initP, currP, priceDiff: currP - initP,
@@ -369,7 +558,7 @@ function buildConstructorStats(rounds) {
     const totalPlayers2 = allPlayers2.length || 1;
     const conPicks = {};
     allPlayers2.forEach(p => {
-        p.team.constructors.forEach(c => { conPicks[c] = (conPicks[c] ?? 0) + 1; });
+        activeRoster(p.team.constructors, p).forEach(c => { conPicks[c] = (conPicks[c] ?? 0) + 1; });
     });
 
     let constructors = Object.entries(REG.constructors).map(([code, info]) => {
@@ -499,7 +688,7 @@ function buildPlayerStats(rounds) {
                             </div>
                         </div>
                     </div>
-                    <div class="stat-secondary">
+                    ${buildStatsAccordion(`${uid}-stats`, `<div class="stat-secondary">
                         <div class="stat-sec-row">
                             ${sc('AVG_PTS/RND', p.avgPts.toFixed(1), p.avgPts < 0 ? 'neg' : '')}
                             ${sc('PTS/M', (p.totalPts / (p.budgetCurr || 1)).toFixed(1))}
@@ -515,7 +704,7 @@ function buildPlayerStats(rounds) {
                             ${sc('CURR_BUDGET', p.budgetCurr.toFixed(1)+'M')}
                             ${sc('DIFF_BUDGET', diffHtml(p.budgetCurr - p.budgetInit, false))}
                         </div>
-                    </div>
+                    </div>`)}
                     ${buildRoundAccordion('pr', p.code, p.roundBreakdown)}
                 </div>`;
           }).join('')}</div>`
@@ -554,6 +743,18 @@ function buildRoundAccordion(idPrefix, code, roundBreakdown) {
         </div>
         <div class="standings-detail player-round-detail" id="${accId}">
             ${rows}
+        </div>`;
+}
+
+// ── STATS ACCORDION (collapsed by default, same look as ROUND_BREAKDOWN) ──
+function buildStatsAccordion(accId, innerHtml, label = 'STATS_DETAILS') {
+    return `
+        <div class="player-round-toggle" onclick="toggleDetail('${accId}',this)">
+            <span class="label">${label}</span>
+            <i class="bi bi-chevron-down s-chevron ms-2"></i>
+        </div>
+        <div class="standings-detail player-round-detail" id="${accId}">
+            ${innerHtml}
         </div>`;
 }
 
@@ -618,7 +819,7 @@ function buildStatCardRow(rank, tagColor, code, name, totalPts, avgPts, ptsPerM,
                     </div>
                 </div>
             </div>
-            <div class="stat-secondary">
+            ${buildStatsAccordion(`${uid}-stats`, `<div class="stat-secondary">
                 <div class="stat-sec-row">
                     ${sc('AVG_PTS/RND', avgPts.toFixed(1), avgPts < 0 ? 'neg' : '')}
                     ${sc('PTS/M',   ptsPerM.toFixed(1), ptsPerM < 0 ? 'neg' : '')}
@@ -634,7 +835,7 @@ function buildStatCardRow(rank, tagColor, code, name, totalPts, avgPts, ptsPerM,
                     ${sc('CURR_PRICE', currP.toFixed(1)+'M')}
                     ${sc('DIFF_PRICE', diffHtml(priceDiff, false))}
                 </div>
-            </div>
+            </div>`)}
             ${roundHtml}
         </div>`;
 }
