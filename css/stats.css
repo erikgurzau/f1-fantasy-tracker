@@ -220,3 +220,10 @@
 .stats-shortcut-icon { margin-right: 0; }  /* gap handled by parent flex gap */
 .stats-section-icon  { margin-right: 6px; width: 13px; height: 13px; }
 .stats-icon--constructor { width: 20px; height: 20px; }
+
+/* ── TEAM BUILDER (slots reuse the h2h dropdown look) ─────── */
+.builder-slot .h2h-dd-btn { background:var(--bg-base); }
+.builder-slot .h2h-dd-btn .driver-tag,
+.builder-slot .h2h-opt .driver-tag { font-size:.82rem; }
+.h2h-dd-list .h2h-opt--disabled { opacity:.35; cursor:not-allowed; }
+.h2h-dd-list .h2h-opt--disabled:hover { background:transparent; }

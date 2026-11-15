@@ -21,6 +21,7 @@ function renderStats() {
         ${buildConstructorStats(doneRounds)}
         ${buildPlayerStats(doneRounds)}
         <div class="mt-4">${buildSeasonTeamInsights()}</div>
+        <div class="mt-4">${buildTeamBuilder()}</div>
     `;
 }
 
@@ -286,6 +287,53 @@ function pickSeasonBestTeam(drvPool, conPool, budget) {
     return best;
 }
 
+// ── shared season helpers (best team + team builder) ───────
+function seasonRounds() { return REG.rounds.filter(r => isRoundComplete(r)); }
+
+// points summed over the given rounds; null if the driver/constructor has no data at all
+function seasonPts(kind, code, rounds) {
+    let pts = 0, n = 0;
+    rounds.forEach(r => {
+        const e = RESULTS[r.id]?.[kind]?.[code];
+        if (e) { pts += e.pts ?? 0; n++; }
+    });
+    return n ? pts : null;
+}
+function seasonPrice(kind, code, useInit) {
+    const init = (kind === 'drivers' ? REG.drivers[code] : REG.constructors[code])?.init_price ?? 0;
+    return useInit ? init : (latestPrice(code, kind) ?? init);
+}
+
+// BUDGET + PRICE_MODE panel (same markup used by every insights block)
+function insightsConfigPanel(budget, useInit, budgetFn, toggleFn) {
+    return `
+        <div class="insights-config-panel">
+            <div class="insights-config-row">
+                <span class="label col text-right"><i class="bi bi-cash me-2"></i>BUDGET</span>
+                <div class="col text-right">
+                    <input type="number" min="10" max="200" step="0.5" value="${budget}"
+                        class="budget-input"
+                        onchange="${budgetFn}(+this.value)">
+                    <span class="muted" style="font-size:.82rem">M</span>
+                </div>
+            </div>
+            <div class="insights-config-sep"></div>
+            <div class="insights-config-row">
+                <span class="label col text-right"><i class="bi bi-tag me-2"></i>PRICE_MODE</span>
+                <div class="col text-right">
+                    <label class="insights-toggle-wrap">
+                        <input type="checkbox" class="insights-toggle-cb" ${useInit ? 'checked' : ''}
+                            onchange="${toggleFn}()">
+                        <span class="insights-toggle-track">
+                            <span class="insights-toggle-thumb"></span>
+                        </span>
+                        <span class="insights-toggle-label">${useInit ? 'INIT' : 'CURR'}</span>
+                    </label>
+                </div>
+            </div>
+        </div>`;
+}
+
 function buildSeasonTeamInsights() {
     return `<div id="season-team-wrap">${buildSeasonTeamInner()}</div>`;
 }
@@ -293,7 +341,7 @@ function buildSeasonTeamInsights() {
 function buildSeasonTeamInner() {
     const BUDGET = seasonTeamBudget;
     const useInit = seasonTeamUseInit;
-    const rounds = REG.rounds.filter(r => isRoundComplete(r));
+    const rounds = seasonRounds();
 
     const header = `<div class="label mb-2"><i class="bi bi-stars me-2"></i>SEASON_INSIGHTS</div>`;
     if (!rounds.length) {
@@ -301,20 +349,9 @@ function buildSeasonTeamInner() {
     }
 
     // season points per driver / constructor (completed rounds only)
-    const sum = (kind, code) => {
-        let pts = 0, n = 0;
-        rounds.forEach(r => {
-            const e = RESULTS[r.id]?.[kind]?.[code];
-            if (e) { pts += e.pts ?? 0; n++; }
-        });
-        return n ? pts : null;
-    };
-    const drvPrice = code => useInit
-        ? (REG.drivers[code]?.init_price ?? 0)
-        : (latestPrice(code, 'drivers') ?? REG.drivers[code]?.init_price ?? 0);
-    const conPrice = code => useInit
-        ? (REG.constructors[code]?.init_price ?? 0)
-        : (latestPrice(code, 'constructors') ?? REG.constructors[code]?.init_price ?? 0);
+    const sum      = (kind, code) => seasonPts(kind, code, rounds);
+    const drvPrice = code => seasonPrice('drivers', code, useInit);
+    const conPrice = code => seasonPrice('constructors', code, useInit);
 
     const allDrivers = Object.keys(REG.drivers)
         .map(code => ({ code, pts: sum('drivers', code), price: drvPrice(code) }))
@@ -330,32 +367,7 @@ function buildSeasonTeamInner() {
     const infeasible = allDrivers.length < 5 || allCons.length < 2 || minCost > BUDGET;
     const team = infeasible ? null : pickSeasonBestTeam(allDrivers, allCons, BUDGET);
 
-    const config = `
-        <div class="insights-config-panel">
-            <div class="insights-config-row">
-                <span class="label col text-right"><i class="bi bi-cash me-2"></i>BUDGET</span>
-                <div class="col text-right">
-                    <input type="number" min="10" max="200" step="0.5" value="${BUDGET}"
-                        class="budget-input"
-                        onchange="setSeasonTeamBudget(+this.value)">
-                    <span class="muted" style="font-size:.82rem">M</span>
-                </div>
-            </div>
-            <div class="insights-config-sep"></div>
-            <div class="insights-config-row">
-                <span class="label col text-right"><i class="bi bi-tag me-2"></i>PRICE_MODE</span>
-                <div class="col text-right">
-                    <label class="insights-toggle-wrap">
-                        <input type="checkbox" class="insights-toggle-cb" ${useInit ? 'checked' : ''}
-                            onchange="toggleSeasonTeamPrice()">
-                        <span class="insights-toggle-track">
-                            <span class="insights-toggle-thumb"></span>
-                        </span>
-                        <span class="insights-toggle-label">${useInit ? 'INIT' : 'CURR'}</span>
-                    </label>
-                </div>
-            </div>
-        </div>`;
+    const config = insightsConfigPanel(BUDGET, useInit, 'setSeasonTeamBudget', 'toggleSeasonTeamPrice');
 
     if (!team) {
         const msg = (allDrivers.length < 5 || allCons.length < 2)
@@ -422,6 +434,157 @@ function setSeasonTeamBudget(v) {
 function toggleSeasonTeamPrice() {
     seasonTeamUseInit = !seasonTeamUseInit;
     refreshSeasonTeam();
+}
+
+// ── TEAM BUILDER ──────────────────────────────────────────
+// Pick 5 drivers (first slot = captain, X2) + 2 constructors from scratch and
+// see the points that team would have scored over the completed rounds.
+let builderDrivers = [null, null, null, null, null];   // [0] = captain
+let builderCons    = [null, null];
+let builderBudget  = 100;
+let builderUseInit = true;                              // true = INIT prices, false = CURR
+
+function buildTeamBuilder() {
+    return `<div id="team-builder-wrap">${buildTeamBuilderInner()}</div>`;
+}
+
+function buildTeamBuilderInner() {
+    const rounds = seasonRounds();
+    const header = `<div class="label mb-2"><i class="bi bi-sliders me-2"></i>TEAM_BUILDER</div>`;
+    if (!rounds.length) {
+        return `${header}<div class="stats-empty label mb-4">NO_COMPLETED_ROUNDS_YET</div>`;
+    }
+    const EPS = 1e-9;
+
+    const mk = (kind, code) => ({
+        code,
+        pts:   seasonPts(kind, code, rounds) ?? 0,
+        price: seasonPrice(kind, code, builderUseInit),
+    });
+    const order  = (a, b) => b.price - a.price || a.code.localeCompare(b.code);
+    const drvAll = Object.keys(REG.drivers).map(c => mk('drivers', c)).sort(order);
+    const conAll = Object.keys(REG.constructors).map(c => mk('constructors', c)).sort(order);
+    const find   = (pool, code) => (code ? pool.find(x => x.code === code) : null) ?? null;
+
+    const chosenD = builderDrivers.map(c => find(drvAll, c));
+    const chosenC = builderCons.map(c => find(conAll, c));
+
+    // totals first: every slot needs to know how much budget is left for it
+    const picks    = [...chosenD, ...chosenC].filter(Boolean);
+    const spent    = picks.reduce((s, x) => s + x.price, 0);
+    const totalPts = chosenD.reduce((s, d, i) => s + (d ? (i === 0 ? d.pts * 2 : d.pts) : 0), 0)
+                   + chosenC.reduce((s, c) => s + (c ? c.pts : 0), 0);
+    const over     = spent > builderBudget + EPS;
+
+    // same chips/tags as the rest of the tab: team-coloured driver-tag (+ X2 chip for the captain)
+    const tagColor = (kind, code) => kind === 'd'
+        ? (REG.drivers[code]?.constructor ?? 'cad').toLowerCase()
+        : code.toLowerCase();
+    const nameOf = (kind, code) => kind === 'd'
+        ? shortName(REG.drivers[code]?.name ?? '')
+        : (REG.constructors[code]?.name ?? '');
+    const X2 = '<span class="x2">X2</span>';
+    const tagHtml = (kind, code, chip = '') =>
+        `<span class="driver-tag" style="border-color:var(--${tagColor(kind, code)})">${code}${chip}</span>`;
+
+    // one combo per slot (same look as FILTER_BY_PLAYER)
+    const slot = (kind, idx, item, pool, picked, isCap, placeholder) => {
+        const id          = `bd-${kind}-${idx}`;
+        const othersSpent = spent - (item?.price ?? 0);
+        const pts         = item ? (isCap ? item.pts * 2 : item.pts) : null;
+
+        const noneOpt = `
+            <div class="h2h-opt${item ? '' : ' h2h-opt--active'}" onclick="builderPick('${kind}',${idx},'')">
+                <span class="muted">${placeholder}</span>
+            </div>`;
+        const optsHtml = pool.map(x => {
+            const isCur = x.code === item?.code;
+            const dup   = !isCur && picked.includes(x.code);                          // already in another slot
+            const broke = !isCur && !dup && othersSpent + x.price > builderBudget + EPS; // not enough budget
+            const dis   = dup || broke;
+            return `
+            <div class="h2h-opt${isCur ? ' h2h-opt--active' : ''}${dis ? ' h2h-opt--disabled' : ''}"${dis ? ' aria-disabled="true"' : ` onclick="builderPick('${kind}',${idx},'${x.code}')"`}>
+                ${tagHtml(kind, x.code)}
+                <span class="h2h-opt-name muted" style="flex:1">${nameOf(kind, x.code)}</span>
+                <span class="${ptsClass(x.pts)}" style="font-size:.72rem;flex-shrink:0;min-width:2.6rem;text-align:right">${x.pts}</span>
+                <span class="muted" style="font-size:.72rem;flex-shrink:0;min-width:2.7rem;text-align:right">${x.price.toFixed(1)}M</span>
+            </div>`;
+        }).join('');
+
+        const btn = item
+            ? `${tagHtml(kind, item.code, isCap ? X2 : '')}
+               <span class="h2h-opt-name muted">${nameOf(kind, item.code)}</span>
+               <span class="fw-bold ${ptsClass(pts)}" style="flex-shrink:0;font-size:.82rem">${pts}</span>
+               <span class="muted" style="flex-shrink:0;font-size:.72rem">${item.price.toFixed(1)}M</span>`
+            : (isCap
+                ? `<span class="d-flex align-items-center"><span class="muted">${placeholder}</span>${X2}</span>`
+                : `<span class="muted">${placeholder}</span>`);
+
+        return `
+            <div class="h2h-dropdown builder-slot" id="${id}">
+                <button class="h2h-dd-btn" onclick="toggleBuilderDd('${id}')">
+                    ${btn}
+                    <i class="bi bi-chevron-down h2h-dd-chevron"></i>
+                </button>
+                <div class="h2h-dd-list">${noneOpt}${optsHtml}</div>
+            </div>`;
+    };
+
+    const dSlots = chosenD.map((d, i) => slot('d', i, d, drvAll, builderDrivers, i === 0, i === 0 ? '[CAPTAIN]' : '[DRIVER]')).join('');
+    const cSlots = chosenC.map((c, i) => slot('c', i, c, conAll, builderCons, false, '[CONSTRUCTOR]')).join('');
+
+    return `${header}
+        ${insightsConfigPanel(builderBudget, builderUseInit, 'setBuilderBudget', 'toggleBuilderPrice')}
+        <div class="card-db mb-4">
+            <div class="card-header-row bb pb-2 mb-2">
+                <div class="card-header-left">
+                    <div class="s-code"><i class="bi bi-pencil-square accent me-2"></i>YOUR_TEAM</div>
+                </div>
+                <div class="card-header-right">
+                    <div class="card-pts ${totalPts > 0 ? 'pos' : totalPts < 0 ? 'neg' : 'muted'}">${totalPts} PTS</div>
+                    <div class="card-gap ${over ? 'neg' : 'muted'}">${spent.toFixed(1)}M / ${builderBudget}M</div>
+                </div>
+            </div>
+            <div class="hub-row-hd d-flex justify-content-between mb-1"><span>DRIVERS</span><span>PTS / PRICE</span></div>
+            <div class="d-flex flex-column" style="gap:.35rem">${dSlots}</div>
+            <div class="hub-row-hd hub-section-sep d-flex justify-content-between mb-1"><span>CONSTRUCTORS</span><span>PTS / PRICE</span></div>
+            <div class="d-flex flex-column" style="gap:.35rem">${cSlots}</div>
+            <div class="mt-3 pt-2 bt text-right">
+                <button class="price-toggle" onclick="resetTeamBuilder()"><i class="bi bi-arrow-counterclockwise me-1"></i>RESET</button>
+            </div>
+        </div>`;
+}
+
+function refreshTeamBuilder() {
+    const el = document.getElementById('team-builder-wrap');
+    if (el) el.innerHTML = buildTeamBuilderInner();
+}
+function toggleBuilderDd(id) {
+    document.querySelectorAll('.builder-slot.open').forEach(d => { if (d.id !== id) d.classList.remove('open'); });
+    document.getElementById(id)?.classList.toggle('open');
+}
+document.addEventListener('click', e => {
+    if (!e.target.closest('.builder-slot')) {
+        document.querySelectorAll('.builder-slot.open').forEach(d => d.classList.remove('open'));
+    }
+}, true);
+
+function builderPick(kind, idx, code) {
+    (kind === 'd' ? builderDrivers : builderCons)[idx] = code || null;
+    refreshTeamBuilder();
+}
+function setBuilderBudget(v) {
+    builderBudget = Number.isFinite(v) && v > 0 ? v : 100;
+    refreshTeamBuilder();
+}
+function toggleBuilderPrice() {
+    builderUseInit = !builderUseInit;
+    refreshTeamBuilder();
+}
+function resetTeamBuilder() {
+    builderDrivers = [null, null, null, null, null];
+    builderCons    = [null, null];
+    refreshTeamBuilder();
 }
 
 // ── PLAYER FILTER (shared, above driver + constructor sections) ───
