@@ -835,10 +835,10 @@
       "CAM": {"pts":6,"exp":0.1,"price":5.4},
       "COL": {"pts":22,"exp":0.2,"price":7},
       "GAS": {"pts":26,"exp":2.8,"price":8.4},
-      "HAD": {"pts":10,"exp":11.8,"price":16.5},
+      "HAD": {"pts":9,"exp":11.8,"price":16.5},
       "HAM": {"pts":33,"exp":25,"price":25.1},
       "HUL": {"pts":11,"exp":3.8,"price":7.2},
-      "LAW": {"pts":9,"exp":6.7,"price":11.7},
+      "LAW": {"pts":10,"exp":6.7,"price":11.7},
       "LEC": {"pts":13,"exp":26.2,"price":25},
       "LIN": {"pts":-11,"exp":4.5,"price":9.4},
       "NOR": {"pts":46,"exp":22.8,"price":26},
@@ -858,8 +858,8 @@
       "HAA": {"pts":25,"exp":7.8,"price":12.2},
       "MCL": {"pts":113,"exp":54.4,"price":33.3},
       "MER": {"pts":78,"exp":71,"price":34},
-      "RED": {"pts":75,"exp":54.3,"price":33.6},
-      "VRB": {"pts":18,"exp":25.9,"price":18.3},
+      "RED": {"pts":74,"exp":54.3,"price":33.6},
+      "VRB": {"pts":19,"exp":25.9,"price":18.3},
       "WIL": {"pts":10,"exp":10.8,"price":13.2}
     }
   }
