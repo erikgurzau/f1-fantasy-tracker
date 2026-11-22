@@ -824,7 +824,7 @@
   },
   "las-vegas": {
     "updated_to": "r",
-    "status": "provisional",
+    "status": "updated",
     "drivers": {
       "ALB": {"pts":-20,"exp":2.6,"price":4.4},
       "ALO": {"pts":14,"exp":-2.9,"price":4.8},
